@@ -12,7 +12,7 @@ import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import me.aroze.simplectf.team.TeamColor;
-import net.kyori.adventure.text.Component;
+import me.aroze.simplectf.util.text.CtfMiniMessage;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -24,7 +24,7 @@ public final class TeamArgumentType implements CustomArgumentType.Converted<Team
     private static final TeamArgumentType instance = new TeamArgumentType();
 
     private static final DynamicCommandExceptionType ERROR_INVALID_TEAM = new DynamicCommandExceptionType(teamColor ->
-        MessageComponentSerializer.message().serialize(Component.text(teamColor + " is not a valid team!")) // todo: nicer message
+        MessageComponentSerializer.message().serialize(CtfMiniMessage.getInstance().deserialize("<warning>'" + teamColor + "' is not a valid team!"))
     );
 
     @Override
