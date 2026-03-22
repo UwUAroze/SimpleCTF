@@ -2,5 +2,5 @@ name: "SimpleCTF"
 version: "1.0"
 main: "me.aroze.simplectf.SimpleCTF"
 author: "Aroze"
-description: "A Capture The Flag plugin for Minecraft."
+description: "A Capture The Flag minigame"
 api-version: '1.21'
