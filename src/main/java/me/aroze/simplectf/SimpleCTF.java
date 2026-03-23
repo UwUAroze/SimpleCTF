@@ -4,7 +4,9 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import me.aroze.simplectf.command.CTFCommand;
-import me.aroze.simplectf.listener.ConnectionListener;
+import me.aroze.simplectf.listener.FlagInteractionListener;
+import me.aroze.simplectf.listener.PlayerConnectionListener;
+import me.aroze.simplectf.listener.PlayerDamageListener;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,7 +29,9 @@ public final class SimpleCTF extends JavaPlugin {
     }
 
     private void registerListeners() {
-        Bukkit.getPluginManager().registerEvents(new ConnectionListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerConnectionListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerDamageListener(), this);
+        Bukkit.getPluginManager().registerEvents(new FlagInteractionListener(), this);
     }
 
     private void registerCommands() {

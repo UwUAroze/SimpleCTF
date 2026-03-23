@@ -3,9 +3,12 @@ package me.aroze.simplectf.game;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import me.aroze.simplectf.player.CTFPlayer;
+import me.aroze.simplectf.task.RespawnTask;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,10 +46,9 @@ public final class CTFGame {
             }
 
             team.dropFlag(baseLocation);
-            team.validateEntities();
 
             for (CTFPlayer ctfPlayer : team.ctfPlayers()) {
-                ctfPlayer.bukkitPlayer().teleport(baseLocation);
+                RespawnTask.respawnPlayer(ctfPlayer.bukkitPlayer(), ctfPlayer);
             }
         }
 
@@ -64,7 +66,6 @@ public final class CTFGame {
             }
 
             team.dropFlag(baseLocation);
-            team.validateEntities();
         }
         gameState = GameState.WAITING;
     }
@@ -125,6 +126,15 @@ public final class CTFGame {
         newTeam.members().add(ctfPlayer.uuid());
 
         ctfPlayer.teamColor(teamColor);
+
+        final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+        final Component coloredName = Component.text(bukkitPlayer.getName(), teamColor.color());
+        bukkitPlayer.displayName(coloredName);
+        bukkitPlayer.playerListName(coloredName);
+
+        if (gameState == GameState.IN_PROGRESS) {
+            RespawnTask.respawnPlayer(bukkitPlayer, ctfPlayer);
+        }
     }
 
     /**
@@ -140,5 +150,9 @@ public final class CTFGame {
         }
 
         ctfPlayer.teamColor(null);
+
+        final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+        bukkitPlayer.displayName(null);
+        bukkitPlayer.playerListName(null);
     }
 }

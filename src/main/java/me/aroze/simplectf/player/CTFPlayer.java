@@ -32,6 +32,9 @@ public final class CTFPlayer {
     /** The team color of the flag this player is currently carrying, or null if the player is not carrying any flag */
     private @Nullable TeamColor carryingFlag = null;
 
+    /** Whether the player is currently in the respawn sequence */
+    private boolean isRespawning = false;
+
     /**
      * Retrieves the associated Bukkit {@link Player}
      *

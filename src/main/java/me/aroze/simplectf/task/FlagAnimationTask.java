@@ -1,20 +1,24 @@
-package me.aroze.simplectf.ticker;
+package me.aroze.simplectf.task;
 
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public final class FlagAnimationTicker extends BukkitRunnable {
+@Accessors(fluent = true)
+public final class FlagAnimationTask extends BukkitRunnable {
 
-    public static final int ROTATION_TICKS = 24;
-    public static final double Y_OFFSET = 0.3;
+    @Getter
+    private static final int ROTATION_TICKS = 24;
+    private static final double Y_OFFSET = 0.3;
 
     private final Display display;
     private final Location location;
 
     private boolean isGoingUp = false;
 
-    public FlagAnimationTicker(final Display display) {
+    public FlagAnimationTask(final Display display) {
         this.display = display;
         this.location = display.getLocation().clone();
     }

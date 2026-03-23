@@ -12,4 +12,7 @@ public final class Unicode {
     public static final String LEFT_ARROW = "←";
     public static final String RIGHT_ARROW = "→";
     public static final String TICK = "✔";
+    public static final String SKULL = "☠";
+    public static final String SWORD = "\uD83D\uDDE1";
+    public static final String BOW = "\uD83C\uDFF9";
 }

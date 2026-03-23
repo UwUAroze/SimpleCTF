@@ -3,12 +3,19 @@ package me.aroze.simplectf.listener;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
+import me.aroze.simplectf.util.PlayerUtil;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.Nullable;
 
-public final class ConnectionListener implements Listener {
+public final class PlayerConnectionListener implements Listener {
+
+    @EventHandler
+    public void onJoin(final PlayerJoinEvent event) {
+        PlayerUtil.reset(event.getPlayer());
+    }
 
     @EventHandler
     public void onQuit(final PlayerQuitEvent event) {

@@ -8,9 +8,10 @@ import me.aroze.simplectf.SimpleCTF;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
-import me.aroze.simplectf.ticker.FlagAnimationTicker;
+import me.aroze.simplectf.task.FlagAnimationTask;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
@@ -73,7 +74,7 @@ public final class Team {
      * @param location the location to drop the flag
      */
     public void dropFlag(@NotNull final Location location) {
-        removeDroppedFlag(null);
+        destroyFlag(null);
         droppedFlagLocation = location;
         validateEntities();
     }
@@ -137,13 +138,13 @@ public final class Team {
         display.setTransformation(transformation);
         display.setBlock(color.flagType().createBlockData());
         display.setGlowing(true);
-        display.setGlowColorOverride(color.glowColor());
-        display.setTeleportDuration(FlagAnimationTicker.ROTATION_TICKS);
+        display.setGlowColorOverride(color.bukkitColor());
+        display.setTeleportDuration(FlagAnimationTask.ROTATION_TICKS());
         display.setPersistent(false);
         flagDisplayUUID = display.getUniqueId();
 
-        flagAnimationTaskId = new FlagAnimationTicker(display)
-            .runTaskTimer(SimpleCTF.getInstance(), 2, FlagAnimationTicker.ROTATION_TICKS)
+        flagAnimationTaskId = new FlagAnimationTask(display)
+            .runTaskTimer(SimpleCTF.getInstance(), 2, FlagAnimationTask.ROTATION_TICKS())
             .getTaskId();
     }
 
@@ -158,6 +159,8 @@ public final class Team {
         }
 
         final Location location = droppedFlagLocation.clone();
+        location.setY(location.getY() + 0.3); // Shifting up since we scale the model down
+
         interaction = location.getWorld().spawn(location, Interaction.class);
         interaction.setInteractionWidth(1f);
         interaction.setInteractionHeight(1.7f);
@@ -166,7 +169,7 @@ public final class Team {
         flagInteractionUUID = interaction.getUniqueId();
     }
 
-    public void removeDroppedFlag(final @Nullable Player capturer) {
+    public void destroyFlag(final @Nullable Player capturer) {
         final @Nullable BlockDisplay flagDisplay = getFlagDisplay();
         if (flagDisplay != null) {
             flagDisplay.remove();
@@ -184,6 +187,15 @@ public final class Team {
         }
 
         droppedFlagLocation = null;
+
+
+        if (capturer != null) {
+            final CTFPlayer ctfPlayer = PlayerManager.getInstance().getPlayer(capturer.getUniqueId());
+            ctfPlayer.carryingFlag(color);
+
+            capturer.getInventory().setHelmet(color.kit().retrieveFlagItem());
+            capturer.playSound(capturer, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 2f);
+        }
     }
 
 }

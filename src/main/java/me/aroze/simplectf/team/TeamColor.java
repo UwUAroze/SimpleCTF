@@ -17,8 +17,8 @@ import org.bukkit.Material;
 @Getter
 @Accessors(fluent = true)
 public enum TeamColor {
-    RED(Material.RED_BANNER, TextColor.color(0xFFA1A1), Color.fromRGB(0xFFA1A1)),
-    BLUE(Material.LIGHT_BLUE_BANNER, TextColor.color(0xA1D8FF), Color.fromRGB(0xA1D8FF)),
+    RED(Material.RED_BANNER, TextColor.color(0xFFA1A1)),
+    BLUE(Material.LIGHT_BLUE_BANNER, TextColor.color(0xA1D8FF)),
     ;
 
     /** The type of banner used for the team's physical flag */
@@ -27,7 +27,8 @@ public enum TeamColor {
     /** The color for the team, used for color matching text & armor where applicable */
     private final TextColor color;
 
-    private final Color glowColor;
+    /** The Bukkit {@link Color} equivalent of the defined team color */
+    private final Color bukkitColor;
 
     /** The display name of the team used in messages */
     private final String displayName;
@@ -35,10 +36,13 @@ public enum TeamColor {
     /** A formatted & colored display of the team name */
     private final Component formattedDisplayName;
 
-    TeamColor(final Material flagType, final TextColor color, final Color glowColor) {
+    /** The team's color-coded kit */
+    private final TeamKit kit;
+
+    TeamColor(final Material flagType, final TextColor color) {
         this.flagType = flagType;
         this.color = color;
-        this.glowColor = glowColor;
+        this.bukkitColor = Color.fromRGB(color.value());
 
         this.displayName = StringUtil.capitalize(this.name().toLowerCase());
         this.formattedDisplayName = CtfMiniMessage.getInstance().deserialize(
@@ -47,5 +51,7 @@ public enum TeamColor {
             Placeholder.unparsed("icon", Unicode.FLAG),
             Placeholder.unparsed("name", displayName)
         );
+
+        this.kit = new TeamKit(this);
     }
 }
