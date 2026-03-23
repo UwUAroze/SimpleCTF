@@ -1,6 +1,7 @@
 package me.aroze.simplectf.player;
 
 import lombok.Getter;
+import me.aroze.simplectf.team.TeamColor;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,11 +27,29 @@ public final class PlayerManager {
      * Retrieves the {@link CTFPlayer} associated with the given {@link Player}, creating and keeping track of a new
      * instance if needed.
      *
-     * @param player the {@link Player} for which to retrieve the associated {@link CTFPlayer}
-     * @return the {@link CTFPlayer} instance associated with the given {@link Player}
+     * @param player the Bukkit {@link Player}
+     * @return the player's {@link CTFPlayer} instance
      */
-    public CTFPlayer getPlayer(Player player) {
-        return players.computeIfAbsent(player.getUniqueId(), CTFPlayer::new);
+    public CTFPlayer getPlayer(final Player player) {
+        return getPlayer(player.getUniqueId());
+    }
+
+    /**
+     * Retrieves the {@link CTFPlayer} associated with the given player {@link UUID}, creating and keeping track of a new
+     * instance if needed.
+     *
+     * @param uuid the {@link UUID} of the player
+     * @return the player's {@link CTFPlayer} instance
+     */
+    public CTFPlayer getPlayer(final UUID uuid) {
+        return players.computeIfAbsent(uuid, CTFPlayer::new);
+    }
+
+    public @Nullable CTFPlayer findPlayerByCarryingFlag(final TeamColor queryTeam) {
+        return players.values().stream()
+            .filter(ctfPlayer -> queryTeam.equals(ctfPlayer.carryingFlag()))
+            .findFirst()
+            .orElse(null);
     }
 
     /**

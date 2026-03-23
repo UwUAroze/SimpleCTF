@@ -5,11 +5,11 @@ import lombok.experimental.Accessors;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
+import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents an ongoing Capture The Flag game, providing methods for retrieving and modifying game state.
@@ -21,12 +21,52 @@ public final class CTFGame {
     @Getter
     private static final CTFGame instance = new CTFGame();
 
+    @Getter
+    private GameState gameState = GameState.WAITING;
+
     private final Map<TeamColor, Team> teams = new EnumMap<>(TeamColor.class);
 
     private CTFGame() {
-        for (TeamColor teamColor : TeamColor.values()) {
-            teams.put(teamColor, new Team());
+        for (final TeamColor teamColor : TeamColor.values()) {
+            teams.put(teamColor, new Team(teamColor));
         }
+    }
+
+    /**
+     * Starts (or restarts) the game, teleporting all queued players to their base locations & populating inventories.
+     */
+    public void start() {
+        for (final Team team : getAllTeams()) {
+            final @Nullable Location baseLocation = team.baseLocation();
+            if (baseLocation == null) {
+                continue;
+            }
+
+            team.dropFlag(baseLocation);
+            team.validateEntities();
+
+            for (CTFPlayer ctfPlayer : team.ctfPlayers()) {
+                ctfPlayer.bukkitPlayer().teleport(baseLocation);
+            }
+        }
+
+        gameState = GameState.IN_PROGRESS;
+    }
+
+    /**
+     * Stops the game, resetting all game state and clearing inventories
+     */
+    public void stop() {
+        for (final Team team : getAllTeams()) {
+            final @Nullable Location baseLocation = team.baseLocation();
+            if (baseLocation == null) {
+                continue;
+            }
+
+            team.dropFlag(baseLocation);
+            team.validateEntities();
+        }
+        gameState = GameState.WAITING;
     }
 
     /**
@@ -38,6 +78,18 @@ public final class CTFGame {
     @NotNull
     public Team getTeam(final TeamColor teamColor) {
         return teams.get(teamColor);
+    }
+
+    public Collection<Team> getAllTeams() {
+        return teams.values();
+    }
+
+    public Collection<UUID> getAllPlayers() {
+        Collection<UUID> players = new ArrayList<>(List.of());
+        for (Team team : getAllTeams()) {
+            players.addAll(team.members());
+        }
+        return players;
     }
 
     /**

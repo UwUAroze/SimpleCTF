@@ -18,6 +18,7 @@ public final class SimpleCTF extends JavaPlugin {
     public void onEnable() {
         registerCommands();
         registerListeners();
+        registerTickers();
     }
 
     @Override
@@ -33,6 +34,10 @@ public final class SimpleCTF extends JavaPlugin {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             commands.registrar().register(CTFCommand.instance().build(), List.of("simplectf", "capturetheflag"));
         });
+    }
+
+    private void registerTickers() {
+//        Bukkit.getScheduler().runTaskTimer(this, new FlagAnimationTicker(), 0, 1);
     }
 
     /**

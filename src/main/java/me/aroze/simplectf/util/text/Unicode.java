@@ -11,4 +11,5 @@ public final class Unicode {
     public static final String FLAG = "⚐";
     public static final String LEFT_ARROW = "←";
     public static final String RIGHT_ARROW = "→";
+    public static final String TICK = "✔";
 }

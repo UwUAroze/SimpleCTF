@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import me.aroze.simplectf.team.TeamColor;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -26,5 +28,17 @@ public final class CTFPlayer {
 
     /** The team color of this player, or null if the player is not on any team */
     private @Nullable TeamColor teamColor = null;
+
+    /** The team color of the flag this player is currently carrying, or null if the player is not carrying any flag */
+    private @Nullable TeamColor carryingFlag = null;
+
+    /**
+     * Retrieves the associated Bukkit {@link Player}
+     *
+     * @return the Bukkit {@link Player} associated with this CTFPlayer
+     */
+    public Player bukkitPlayer() {
+        return Bukkit.getPlayer(uuid);
+    }
 
 }
