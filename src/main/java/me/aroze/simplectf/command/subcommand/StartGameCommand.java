@@ -11,6 +11,7 @@ import me.aroze.simplectf.game.GameState;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
+import me.aroze.simplectf.util.text.Unicode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -27,6 +28,9 @@ public final class StartGameCommand {
 
     private static final Component ERROR_NOT_ENOUGH_PLAYERS = CtfMiniMessage.getInstance().deserialize("<warning>There must be at least 2 players in the game to start!");
     private static final Component ERROR_GAME_IN_PROGRESS = CtfMiniMessage.getInstance().deserialize("<warning>The game is in progress, are you looking for /ctf stop?");
+    private static final Component SUCCESS_GAME_STARTED = CtfMiniMessage.getInstance().deserialize("<s><tick> <p>You've started the game, enjoy!",
+        Placeholder.unparsed("tick", Unicode.TICK)
+    );
 
     private static final JoinConfiguration JOIN_CONFIGURATION_MISSING_BASE_LOCATIONS = JoinConfiguration.separators(Component.text(", "), Component.text(" and "));
 
@@ -70,6 +74,7 @@ public final class StartGameCommand {
         }
 
         CTFGame.instance().start();
+        sender.sendMessage(SUCCESS_GAME_STARTED);
         return Command.SINGLE_SUCCESS;
     }
 

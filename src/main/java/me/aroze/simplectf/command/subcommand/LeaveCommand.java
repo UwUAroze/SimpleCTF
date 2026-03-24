@@ -12,6 +12,7 @@ import me.aroze.simplectf.player.PlayerManager;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
 import me.aroze.simplectf.util.text.Unicode;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.entity.Player;
 
 @Accessors(fluent = true)
@@ -21,7 +22,9 @@ public final class LeaveCommand {
     private static final LeaveCommand instance = new LeaveCommand();
 
     private static final Component ERROR_NOT_IN_GAME = CtfMiniMessage.getInstance().deserialize("<warning>You're not in a game, use /ctf join <team> to join!");
-    private static final Component SUCCESS_LEFT_GAME = CtfMiniMessage.getInstance().deserialize("<s>" + Unicode.LEFT_ARROW + " <p>You've left the game");
+    private static final Component SUCCESS_LEFT_GAME = CtfMiniMessage.getInstance().deserialize("<s><arrow> <p>You've left the game",
+        Placeholder.unparsed("arrow", Unicode.LEFT_ARROW)
+    );
 
     private LeaveCommand() {
     }

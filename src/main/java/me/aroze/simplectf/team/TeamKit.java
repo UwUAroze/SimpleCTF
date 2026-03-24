@@ -67,7 +67,7 @@ public class TeamKit {
             }
         });
 
-        return item;
+        return ItemUtil.setBasicFlags(item);
     }
 
 }

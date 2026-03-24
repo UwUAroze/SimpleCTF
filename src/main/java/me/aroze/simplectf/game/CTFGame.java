@@ -6,6 +6,7 @@ import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.task.RespawnTask;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
+import me.aroze.simplectf.util.PlayerUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -47,7 +48,7 @@ public final class CTFGame {
 
             team.dropFlag(baseLocation);
 
-            for (CTFPlayer ctfPlayer : team.ctfPlayers()) {
+            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
                 RespawnTask.respawnPlayer(ctfPlayer.bukkitPlayer(), ctfPlayer);
             }
         }
@@ -63,6 +64,11 @@ public final class CTFGame {
             final @Nullable Location baseLocation = team.baseLocation();
             if (baseLocation == null) {
                 continue;
+            }
+
+            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
+                ctfPlayer.carryingFlag(null);
+                PlayerUtil.reset(ctfPlayer.bukkitPlayer());
             }
 
             team.dropFlag(baseLocation);

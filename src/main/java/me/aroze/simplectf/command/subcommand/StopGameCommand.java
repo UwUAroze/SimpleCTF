@@ -9,7 +9,9 @@ import lombok.experimental.Accessors;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.game.GameState;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
+import me.aroze.simplectf.util.text.Unicode;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 @Accessors(fluent = true)
@@ -19,6 +21,9 @@ public final class StopGameCommand {
     private static final StopGameCommand instance = new StopGameCommand();
 
     private static final Component ERROR_GAME_NOT_IN_PROGRESS = CtfMiniMessage.getInstance().deserialize("<warning>The game isn't in progress, are you looking for /ctf start?");
+    private static final Component SUCCESS_GAME_STOPPED = CtfMiniMessage.getInstance().deserialize("<s><tick> <p>You've stopped the game early!",
+        Placeholder.unparsed("tick", Unicode.TICK)
+    );
 
     private StopGameCommand() {
     }
@@ -38,6 +43,7 @@ public final class StopGameCommand {
         }
 
         CTFGame.instance().stop();
+        sender.sendMessage(SUCCESS_GAME_STOPPED);
         return Command.SINGLE_SUCCESS;
     }
 

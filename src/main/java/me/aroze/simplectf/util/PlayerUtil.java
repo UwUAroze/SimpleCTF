@@ -15,5 +15,7 @@ public final class PlayerUtil {
         player.setWalkSpeed(0.2f);
         player.setFlySpeed(0.1f);
         player.getInventory().clear();
+        player.clearActivePotionEffects();
     }
+
 }
