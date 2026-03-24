@@ -21,6 +21,11 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * A task to respawn the player with a preceding death/respawning sequence.
+ *
+ * @see #respawnPlayer(Player, CTFPlayer) to instantly respawn the player.
+ */
 public final class RespawnTask extends BukkitRunnable {
 
     private static final int RESPAWN_TICKS = 60;
@@ -87,7 +92,15 @@ public final class RespawnTask extends BukkitRunnable {
         }
     }
 
+    /**
+     * Respawns the player, teleporting them to their spawn, resetting their health & other attributes along with
+     * applying their team kit if they are in the game.
+     *
+     * @param player the {@link Player} to respawn
+     * @param ctfPlayer the {@link CTFPlayer} representation of the player to respawn
+     */
     public static void respawnPlayer(final Player player, final CTFPlayer ctfPlayer) {
+        PlayerUtil.reset(player);
         player.clearTitle();
         player.teleport(getRespawnLocation(ctfPlayer));
         player.setGameMode(GameMode.SURVIVAL);

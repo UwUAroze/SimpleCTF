@@ -31,7 +31,12 @@ public final class FlagInteractionListener implements Listener {
             .orElse(null);
 
         if (interactedTeam == null) return;
-        if (playerTeam == interactedTeam) return;
+
+        if (playerTeam == interactedTeam) {
+            if (interactedTeam.isFlagAtBase()) return;
+            interactedTeam.retrieveFlag(player);
+            return;
+        }
 
         interactedTeam.destroyFlag(player);
     }

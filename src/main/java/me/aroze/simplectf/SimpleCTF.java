@@ -18,7 +18,6 @@ public final class SimpleCTF extends JavaPlugin {
     public void onEnable() {
         registerCommands();
         registerListeners();
-        registerTickers();
     }
 
     @Override
@@ -41,12 +40,9 @@ public final class SimpleCTF extends JavaPlugin {
         });
     }
 
-    private void registerTickers() {
-//        Bukkit.getScheduler().runTaskTimer(this, new FlagAnimationTicker(), 0, 1);
-    }
-
     /**
      * Retrieves the singleton instance of the SimpleCTF plugin.
+     *
      * @return {@link SimpleCTF} plugin instance
      */
     public static SimpleCTF getInstance() {

@@ -61,7 +61,7 @@ public final class SetFlagCommand {
         location.setZ(location.getBlockZ() + 0.5);
 
         team.baseLocation(location);
-        team.dropFlag(location);
+        team.retrieveFlag(null);
 
         player.sendMessage(CtfMiniMessage.getInstance().deserialize(
             "<s><tick> <p>Set flag location for <team>",

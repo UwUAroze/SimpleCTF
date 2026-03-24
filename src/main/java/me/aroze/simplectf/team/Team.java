@@ -69,14 +69,91 @@ public final class Team {
     }
 
     /**
-     * Drops the flag in the world at the given location, removing any previously dropped flag.
+     * Checks whether the flag is at the team's base
+     *
+     * @return {@code true} if the flag is at the team's base, or {@code false} if dropped elsewhere
+     */
+    public boolean isFlagAtBase() {
+        return droppedFlagLocation == baseLocation;
+    }
+
+    /**
+     * Drops the flag in the world at the given location, removing any previously dropped flag & removing it from any
+     * player carrying it
      *
      * @param location the location to drop the flag
      */
     public void dropFlag(@NotNull final Location location) {
+        @Nullable CTFPlayer flagHolder = PlayerManager.getInstance().findPlayerByCarryingFlag(color);
+        if (flagHolder != null) {
+            flagHolder.carryingFlag(null);
+            flagHolder.bukkitPlayer().getInventory().remove(color.kit().retrieveFlagItem());
+        }
+
         destroyFlag(null);
         droppedFlagLocation = location;
         validateEntities();
+    }
+
+    /**
+     * Ensures entities relating to the team (flag display, interaction hitbox) are present in the world, respawning
+     * them if necessary
+     */
+    public void validateEntities() {
+        validateFlagDisplay();
+        validateFlagInteraction();
+    }
+
+    /**
+     * Safely retrieves the flag to the team, removing it if dropped and respawning it at the team's base.
+     *
+     * @param retriever the {@link Player} who retrieved the flag, or {@code null} if the flag is being reset without a
+     * retriever.
+     */
+    public void retrieveFlag(final @Nullable Player retriever) {
+        if (baseLocation == null) {
+            return;
+        }
+
+        dropFlag(baseLocation);
+
+        if (retriever != null) {
+            retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
+        }
+    }
+
+    /**
+     * Destroys the flag for the team, safely removing the display/interaction entity & tracking captured flag state if
+     * a capturer is provided.
+     *
+     * @param capturer The {@link Player} who captured the flag, or {@code null} if the flag is not being captured
+     */
+    public void destroyFlag(final @Nullable Player capturer) {
+        final @Nullable BlockDisplay flagDisplay = getFlagDisplay();
+        if (flagDisplay != null) {
+            flagDisplay.remove();
+            flagDisplayUUID = null;
+        }
+
+        final @Nullable Interaction flagInteraction = getFlagInteraction();
+        if (flagInteraction != null) {
+            flagInteraction.remove();
+            flagInteractionUUID = null;
+        }
+
+        if (flagAnimationTaskId != null) {
+            Bukkit.getScheduler().cancelTask(flagAnimationTaskId);
+        }
+
+        droppedFlagLocation = null;
+
+        if (capturer != null) {
+            final CTFPlayer ctfPlayer = PlayerManager.getInstance().getPlayer(capturer.getUniqueId());
+            ctfPlayer.carryingFlag(color);
+
+            capturer.getInventory().setHelmet(color.kit().retrieveFlagItem());
+            capturer.playSound(capturer, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 2f);
+        }
     }
 
     private @Nullable BlockDisplay getFlagDisplay() {
@@ -105,11 +182,6 @@ public final class Team {
         return (Interaction) entity;
     }
 
-    public void validateEntities() {
-        validateFlagDisplay();
-        validateFlagInteraction();
-    }
-
     private void validateFlagDisplay() {
         if (droppedFlagLocation == null) {
             return;
@@ -122,7 +194,6 @@ public final class Team {
 
         final Location location = droppedFlagLocation.clone();
         location.setPitch(0);
-        location.setYaw(0);
         location.setY(location.getY() + 0.3); // Shifting up since we scale the model down
 
         display = location.getWorld().spawn(location, BlockDisplay.class);
@@ -167,35 +238,6 @@ public final class Team {
         interaction.setPersistent(false);
 
         flagInteractionUUID = interaction.getUniqueId();
-    }
-
-    public void destroyFlag(final @Nullable Player capturer) {
-        final @Nullable BlockDisplay flagDisplay = getFlagDisplay();
-        if (flagDisplay != null) {
-            flagDisplay.remove();
-            flagDisplayUUID = null;
-        }
-
-        final @Nullable Interaction flagInteraction = getFlagInteraction();
-        if (flagInteraction != null) {
-            flagInteraction.remove();
-            flagInteractionUUID = null;
-        }
-
-        if (flagAnimationTaskId != null) {
-            Bukkit.getScheduler().cancelTask(flagAnimationTaskId);
-        }
-
-        droppedFlagLocation = null;
-
-
-        if (capturer != null) {
-            final CTFPlayer ctfPlayer = PlayerManager.getInstance().getPlayer(capturer.getUniqueId());
-            ctfPlayer.carryingFlag(color);
-
-            capturer.getInventory().setHelmet(color.kit().retrieveFlagItem());
-            capturer.playSound(capturer, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 2f);
-        }
     }
 
 }

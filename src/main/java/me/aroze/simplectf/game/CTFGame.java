@@ -42,11 +42,7 @@ public final class CTFGame {
     public void start() {
         for (final Team team : getAllTeams()) {
             final @Nullable Location baseLocation = team.baseLocation();
-            if (baseLocation == null) {
-                continue;
-            }
-
-            team.dropFlag(baseLocation);
+            team.retrieveFlag(null);
 
             for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
                 RespawnTask.respawnPlayer(ctfPlayer.bukkitPlayer(), ctfPlayer);
@@ -67,11 +63,10 @@ public final class CTFGame {
             }
 
             for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
-                ctfPlayer.carryingFlag(null);
                 PlayerUtil.reset(ctfPlayer.bukkitPlayer());
             }
 
-            team.dropFlag(baseLocation);
+            team.retrieveFlag(null);
         }
         gameState = GameState.WAITING;
     }
@@ -125,7 +120,7 @@ public final class CTFGame {
         final Team currentTeam = getTeam(ctfPlayer);
 
         if (currentTeam != null) {
-            currentTeam.members().remove(ctfPlayer.uuid());
+            removePlayer(ctfPlayer);
         }
 
         final Team newTeam = teams.get(teamColor);
@@ -144,7 +139,7 @@ public final class CTFGame {
     }
 
     /**
-     * Removes the given {@link CTFPlayer} from the game
+     * Safely removes the given {@link CTFPlayer} from the game, resetting or removing all state associated with them.
      *
      * @param ctfPlayer the {@link CTFPlayer} to remove from the game
      */
@@ -153,6 +148,11 @@ public final class CTFGame {
 
         if (currentTeam != null) {
             currentTeam.members().remove(ctfPlayer.uuid());
+        }
+
+        if (ctfPlayer.carryingFlag() != null) {
+            final Team flagTeam = teams.get(ctfPlayer.carryingFlag());
+            flagTeam.dropFlag(ctfPlayer.bukkitPlayer().getLocation());
         }
 
         ctfPlayer.teamColor(null);
