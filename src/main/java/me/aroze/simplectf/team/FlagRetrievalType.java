@@ -1,7 +1,7 @@
 package me.aroze.simplectf.team;
 
 /**
- * Represents how the flag was retrieved.
+ * Represents how the flag was retrieved to base.
  */
 public enum FlagRetrievalType {
     /** The flag was retrieved due to the game resetting */

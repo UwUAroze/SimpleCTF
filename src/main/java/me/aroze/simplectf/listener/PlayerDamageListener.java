@@ -79,7 +79,7 @@ public final class PlayerDamageListener implements Listener {
         final TeamColor flagColor = ctfPlayer.carryingFlag();
         if (flagColor != null) {
             final Team team = CTFGame.instance().getTeam(flagColor);
-            team.dropFlag(player.getLocation());
+            team.dropFlag(player.getLocation(), true);
         }
 
         Bukkit.broadcast(constructDeathBroadcast(player, killer, projectileDistance));

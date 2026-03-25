@@ -223,7 +223,7 @@ public final class CTFGame {
 
         if (ctfPlayer.carryingFlag() != null) {
             final Team flagTeam = teams.get(ctfPlayer.carryingFlag());
-            flagTeam.dropFlag(ctfPlayer.bukkitPlayer().getLocation());
+            flagTeam.dropFlag(ctfPlayer.bukkitPlayer().getLocation(), true);
         }
 
         ctfPlayer.teamColor(null);

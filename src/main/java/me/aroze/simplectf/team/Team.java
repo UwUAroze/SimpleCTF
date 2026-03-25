@@ -12,6 +12,8 @@ import me.aroze.simplectf.task.FlagAnimationTask;
 import me.aroze.simplectf.task.GameTickTask;
 import me.aroze.simplectf.util.PlayerUtil;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -136,12 +138,16 @@ public final class Team {
      * player carrying it
      *
      * @param location the location to drop the flag
+     * @param broadcast whether to broadcast the flag being dropped by a player
      */
-    public void dropFlag(@NotNull final Location location) {
+    public void dropFlag(@NotNull final Location location, final boolean broadcast) {
         @Nullable CTFPlayer flagHolder = PlayerManager.getInstance().findPlayerByCarryingFlag(color);
         if (flagHolder != null) {
             flagHolder.carryingFlag(null);
             flagHolder.bukkitPlayer().getInventory().setHelmet(null);
+            if (broadcast) {
+                Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been dropped by <player></color>", flagHolder.bukkitPlayer()));
+            }
         }
 
         destroyFlag(null);
@@ -169,7 +175,7 @@ public final class Team {
             return;
         }
 
-        dropFlag(baseLocation);
+        dropFlag(baseLocation, false);
 
         if (retriever == null) {
             return;
@@ -177,13 +183,13 @@ public final class Team {
 
         if (retrievalType == FlagRetrievalType.RETURNED) {
             retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
-            Bukkit.broadcast(CtfMiniMessage.getInstance().deserialize("returned"));
+            Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been returned by <player></color>", retriever));
             return;
         }
 
         if (retrievalType == FlagRetrievalType.CAPTURED) {
             retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
-            Bukkit.broadcast(CtfMiniMessage.getInstance().deserialize("captured"));
+            Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been captured by <player></color>", retriever));
         }
     }
 
@@ -218,7 +224,16 @@ public final class Team {
 
             capturer.getInventory().setHelmet(color.kit().retrieveFlagItem());
             capturer.playSound(capturer, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 2f);
+            Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been picked up by <player></color>", capturer));
         }
+    }
+
+    private Component formatFlagBroadcast(final String input, final Player player) {
+        return CtfMiniMessage.getInstance().deserialize(input,
+            Placeholder.styling("color", color.color()),
+            Placeholder.component("team", color.formattedDisplayName()),
+            Placeholder.component("player", player.displayName())
+        );
     }
 
     private @Nullable BlockDisplay getFlagDisplay() {
