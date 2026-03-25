@@ -9,6 +9,8 @@ import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
 import me.aroze.simplectf.task.FlagAnimationTask;
+import me.aroze.simplectf.util.PlayerUtil;
+import me.aroze.simplectf.util.text.CtfMiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -35,11 +37,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public final class Team {
 
+    /** The radius of the base, centered around {@link #baseLocation} */
+    public static final int BASE_RADIUS = 3;
+
+    /** {@link #BASE_RADIUS} squared, used for faster distance calculations */
+    public static final int BASE_RADIUS_SQUARED = BASE_RADIUS * BASE_RADIUS;
+
     /** The {@link TeamColor} of this team */
     private final TeamColor color;
 
     /** The UUIDs of all members in this team */
     private final List<UUID> members = new ArrayList<>();
+
+    /** The current score of the team */
+    private int score = 0;
 
     /** The {@link Location} where the flag and team members will spawn. May be null if the base has not been set yet. */
     @Setter
@@ -77,6 +88,34 @@ public final class Team {
         return droppedFlagLocation == baseLocation;
     }
 
+    public void incrementScore() {
+        score++;
+        if (score >= CTFGame.WINNING_SCORE) {
+            CTFGame.instance().stop();
+        }
+    }
+
+    public void reset() {
+        score = 0;
+        retrieveFlag(FlagRetrievalType.RESET, null);
+
+        for (final CTFPlayer ctfPlayer : this.ctfPlayers()) {
+            PlayerUtil.reset(ctfPlayer.bukkitPlayer());
+        }
+    }
+
+    /**
+     * Checks whether the given location is in the team's base by checking the location's distance to the base and
+     * comparing to {@link #BASE_RADIUS}. If the base location is not set, this method will always return {@code false}.
+     *
+     * @param location the {@link Location} to check
+     * @return {@code true} if the Location is in the base, otherwise {@code false}
+     */
+    public boolean isInBase(final Location location) {
+        if (baseLocation == null) return false;
+        return location.distanceSquared(baseLocation) < BASE_RADIUS_SQUARED;
+    }
+
     /**
      * Drops the flag in the world at the given location, removing any previously dropped flag & removing it from any
      * player carrying it
@@ -87,7 +126,7 @@ public final class Team {
         @Nullable CTFPlayer flagHolder = PlayerManager.getInstance().findPlayerByCarryingFlag(color);
         if (flagHolder != null) {
             flagHolder.carryingFlag(null);
-            flagHolder.bukkitPlayer().getInventory().remove(color.kit().retrieveFlagItem());
+            flagHolder.bukkitPlayer().getInventory().setHelmet(null);
         }
 
         destroyFlag(null);
@@ -110,15 +149,26 @@ public final class Team {
      * @param retriever the {@link Player} who retrieved the flag, or {@code null} if the flag is being reset without a
      * retriever.
      */
-    public void retrieveFlag(final @Nullable Player retriever) {
+    public void retrieveFlag(final FlagRetrievalType retrievalType, final @Nullable Player retriever) {
         if (baseLocation == null) {
             return;
         }
 
         dropFlag(baseLocation);
 
-        if (retriever != null) {
+        if (retriever == null) {
+            return;
+        }
+
+        if (retrievalType == FlagRetrievalType.RETURNED) {
             retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
+            Bukkit.broadcast(CtfMiniMessage.getInstance().deserialize("returned"));
+            return;
+        }
+
+        if (retrievalType == FlagRetrievalType.CAPTURED) {
+            retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
+            Bukkit.broadcast(CtfMiniMessage.getInstance().deserialize("captured"));
         }
     }
 

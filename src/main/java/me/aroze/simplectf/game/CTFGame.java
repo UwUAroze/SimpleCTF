@@ -4,10 +4,12 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.task.RespawnTask;
+import me.aroze.simplectf.team.FlagRetrievalType;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.PlayerUtil;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,8 @@ public final class CTFGame {
     /** Singleton instance of the CTFGame */
     @Getter
     private static final CTFGame instance = new CTFGame();
+
+    public final static int WINNING_SCORE = 3;
 
     @Getter
     private GameState gameState = GameState.WAITING;
@@ -42,7 +46,7 @@ public final class CTFGame {
     public void start() {
         for (final Team team : getAllTeams()) {
             final @Nullable Location baseLocation = team.baseLocation();
-            team.retrieveFlag(null);
+            team.retrieveFlag(FlagRetrievalType.RESET, null);
 
             for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
                 RespawnTask.respawnPlayer(ctfPlayer.bukkitPlayer(), ctfPlayer);
@@ -53,22 +57,41 @@ public final class CTFGame {
     }
 
     /**
-     * Stops the game, resetting all game state and clearing inventories
+     * Stops the game, declares winners & resets all game state along with clearing inventories
      */
     public void stop() {
+        final Map<Integer, List<TeamColor>> teamScores = new HashMap<>();
+        int highestScore = 0;
+
         for (final Team team : getAllTeams()) {
+            final int score = team.score();
+            teamScores.computeIfAbsent(score, ArrayList::new).add(team.color());
+            if (score > highestScore) {
+                highestScore = score;
+            }
+
             final @Nullable Location baseLocation = team.baseLocation();
             if (baseLocation == null) {
                 continue;
             }
 
-            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
-                PlayerUtil.reset(ctfPlayer.bukkitPlayer());
-            }
-
-            team.retrieveFlag(null);
+            team.reset();
         }
+
         gameState = GameState.WAITING;
+
+        final List<TeamColor> winningTeams = teamScores.get(highestScore);
+        if (winningTeams.isEmpty()) {
+            return;
+        }
+
+        if (winningTeams.size() > 1) {
+            Bukkit.broadcast(Component.text("draw "));
+        }
+
+        winningTeams.forEach(teamColor -> {
+            Bukkit.broadcast(Component.text("winner " + teamColor.name()));
+        });
     }
 
     /**
@@ -78,7 +101,7 @@ public final class CTFGame {
      * @return the associated {@link Team} instance
      */
     @NotNull
-    public Team getTeam(final TeamColor teamColor) {
+    public Team getTeam(final @NotNull TeamColor teamColor) {
         return teams.get(teamColor);
     }
 
@@ -132,6 +155,7 @@ public final class CTFGame {
         final Component coloredName = Component.text(bukkitPlayer.getName(), teamColor.color());
         bukkitPlayer.displayName(coloredName);
         bukkitPlayer.playerListName(coloredName);
+        CTFScoreboard.instance().getCTFTeam(teamColor).addPlayer(bukkitPlayer);
 
         if (gameState == GameState.IN_PROGRESS) {
             RespawnTask.respawnPlayer(bukkitPlayer, ctfPlayer);
@@ -145,9 +169,11 @@ public final class CTFGame {
      */
     public void removePlayer(final @NotNull CTFPlayer ctfPlayer) {
         final Team currentTeam = getTeam(ctfPlayer);
+        final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
 
         if (currentTeam != null) {
             currentTeam.members().remove(ctfPlayer.uuid());
+            CTFScoreboard.instance().getCTFTeam(currentTeam.color()).removePlayer(bukkitPlayer);
         }
 
         if (ctfPlayer.carryingFlag() != null) {
@@ -157,8 +183,8 @@ public final class CTFGame {
 
         ctfPlayer.teamColor(null);
 
-        final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
         bukkitPlayer.displayName(null);
         bukkitPlayer.playerListName(null);
+        PlayerUtil.reset(bukkitPlayer);
     }
 }

@@ -10,6 +10,7 @@ import lombok.experimental.Accessors;
 import me.aroze.simplectf.command.argument.TeamArgumentType;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.game.GameState;
+import me.aroze.simplectf.team.FlagRetrievalType;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
@@ -61,7 +62,7 @@ public final class SetFlagCommand {
         location.setZ(location.getBlockZ() + 0.5);
 
         team.baseLocation(location);
-        team.retrieveFlag(null);
+        team.retrieveFlag(FlagRetrievalType.RESET, null);
 
         player.sendMessage(CtfMiniMessage.getInstance().deserialize(
             "<s><tick> <p>Set flag location for <team>",

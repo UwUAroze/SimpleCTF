@@ -4,6 +4,7 @@ import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.game.GameState;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
+import me.aroze.simplectf.team.FlagRetrievalType;
 import me.aroze.simplectf.team.Team;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.Player;
@@ -34,7 +35,7 @@ public final class FlagInteractionListener implements Listener {
 
         if (playerTeam == interactedTeam) {
             if (interactedTeam.isFlagAtBase()) return;
-            interactedTeam.retrieveFlag(player);
+            interactedTeam.retrieveFlag(FlagRetrievalType.RETURNED, player);
             return;
         }
 
