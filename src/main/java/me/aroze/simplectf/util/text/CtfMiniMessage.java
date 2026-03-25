@@ -17,6 +17,9 @@ import java.util.List;
  */
 public final class CtfMiniMessage {
 
+    public static final TextColor PRIMARY_COLOR = TextColor.color(0xF2E0FF);
+    public static final TextColor SECONDARY_COLOR = TextColor.color(0xEBC7FF);
+
     /** Singleton instance of the built {@link MiniMessage} instance */
     @Getter
     private static final MiniMessage instance = new CtfMiniMessage().build();
@@ -34,8 +37,8 @@ public final class CtfMiniMessage {
     public MiniMessage build() {
         addPreProcessed("warning", "<#ff6e6e>⚠ <#ff7f6e>");
 
-        addColorCode("p", TextColor.color(0xF2E0FF)); // Primary
-        addColorCode("s", TextColor.color(0xEBC7FF)); // Secondary
+        addColorCode("p", PRIMARY_COLOR);
+        addColorCode("s", SECONDARY_COLOR);
 
         format.add(StandardTags.defaults());
 

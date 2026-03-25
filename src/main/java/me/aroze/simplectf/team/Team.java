@@ -9,6 +9,7 @@ import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
 import me.aroze.simplectf.task.FlagAnimationTask;
+import me.aroze.simplectf.task.GameTickTask;
 import me.aroze.simplectf.util.PlayerUtil;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
 import org.bukkit.Bukkit;
@@ -38,10 +39,10 @@ import java.util.UUID;
 public final class Team {
 
     /** The radius of the base, centered around {@link #baseLocation} */
-    public static final int BASE_RADIUS = 3;
+    private static final int BASE_RADIUS = 3;
 
     /** {@link #BASE_RADIUS} squared, used for faster distance calculations */
-    public static final int BASE_RADIUS_SQUARED = BASE_RADIUS * BASE_RADIUS;
+    private static final int BASE_RADIUS_SQUARED = BASE_RADIUS * BASE_RADIUS;
 
     /** The {@link TeamColor} of this team */
     private final TeamColor color;
@@ -88,13 +89,27 @@ public final class Team {
         return droppedFlagLocation == baseLocation;
     }
 
+    /**
+     * Increments the team's score by 1, checking for a win condition and instantly updates the score display if
+     * necessary.
+     */
     public void incrementScore() {
         score++;
         if (score >= CTFGame.WINNING_SCORE) {
             CTFGame.instance().stop();
+            return;
+        }
+
+        final @Nullable GameTickTask gameTickTask = CTFGame.instance().gameTickTask();
+        if (gameTickTask != null) {
+            gameTickTask.tick();
         }
     }
 
+    /**
+     * Resets all game state related to this team (score back to 0, flag back at base and resetting state of team
+     * members).
+     */
     public void reset() {
         score = 0;
         retrieveFlag(FlagRetrievalType.RESET, null);

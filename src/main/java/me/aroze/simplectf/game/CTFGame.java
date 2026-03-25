@@ -2,12 +2,15 @@ package me.aroze.simplectf.game;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import me.aroze.simplectf.SimpleCTF;
 import me.aroze.simplectf.player.CTFPlayer;
+import me.aroze.simplectf.task.GameTickTask;
 import me.aroze.simplectf.task.RespawnTask;
 import me.aroze.simplectf.team.FlagRetrievalType;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.PlayerUtil;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,10 +30,20 @@ public final class CTFGame {
     @Getter
     private static final CTFGame instance = new CTFGame();
 
-    public final static int WINNING_SCORE = 3;
+    /** Number of points needed to win */
+    public static final int WINNING_SCORE = 3;
 
+    /** The current {@link GameState} */
     @Getter
     private GameState gameState = GameState.WAITING;
+
+    /** The bossbar shown to all players in the game */
+    @Getter
+    private final BossBar bossBar;
+
+    /** The task responsible for ticking the game timer */
+    @Getter
+    private @Nullable GameTickTask gameTickTask = null;
 
     private final Map<TeamColor, Team> teams = new EnumMap<>(TeamColor.class);
 
@@ -38,6 +51,8 @@ public final class CTFGame {
         for (final TeamColor teamColor : TeamColor.values()) {
             teams.put(teamColor, new Team(teamColor));
         }
+
+        this.bossBar = BossBar.bossBar(Component.empty(), 1.0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
     }
 
     /**
@@ -45,7 +60,6 @@ public final class CTFGame {
      */
     public void start() {
         for (final Team team : getAllTeams()) {
-            final @Nullable Location baseLocation = team.baseLocation();
             team.retrieveFlag(FlagRetrievalType.RESET, null);
 
             for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
@@ -54,12 +68,28 @@ public final class CTFGame {
         }
 
         gameState = GameState.IN_PROGRESS;
+        startTickTask();
+
+        for (final Team team : getAllTeams()) {
+            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
+                final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+                bukkitPlayer.showBossBar(bossBar);
+            }
+        }
     }
 
     /**
      * Stops the game, declares winners & resets all game state along with clearing inventories
      */
     public void stop() {
+        cancelTickTask();
+
+        for (final Team team : getAllTeams()) {
+            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
+                ctfPlayer.bukkitPlayer().hideBossBar(bossBar);
+            }
+        }
+
         final Map<Integer, List<TeamColor>> teamScores = new HashMap<>();
         int highestScore = 0;
 
@@ -105,10 +135,20 @@ public final class CTFGame {
         return teams.get(teamColor);
     }
 
+    /**
+     * Retrieves a collection of all teams currently in the game.
+     *
+     * @return collection of all teams in the game
+     */
     public Collection<Team> getAllTeams() {
         return teams.values();
     }
 
+    /**
+     * Retrieves a collection of all players currently in the game, across all teams.
+     *
+     * @return collection of all player UUIDs in the game
+     */
     public Collection<UUID> getAllPlayers() {
         Collection<UUID> players = new ArrayList<>(List.of());
         for (Team team : getAllTeams()) {
@@ -159,6 +199,9 @@ public final class CTFGame {
 
         if (gameState == GameState.IN_PROGRESS) {
             RespawnTask.respawnPlayer(bukkitPlayer, ctfPlayer);
+            if (gameTickTask != null) {
+                bukkitPlayer.showBossBar(bossBar);
+            }
         }
     }
 
@@ -170,6 +213,8 @@ public final class CTFGame {
     public void removePlayer(final @NotNull CTFPlayer ctfPlayer) {
         final Team currentTeam = getTeam(ctfPlayer);
         final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+
+        bukkitPlayer.hideBossBar(bossBar);
 
         if (currentTeam != null) {
             currentTeam.members().remove(ctfPlayer.uuid());
@@ -186,5 +231,21 @@ public final class CTFGame {
         bukkitPlayer.displayName(null);
         bukkitPlayer.playerListName(null);
         PlayerUtil.reset(bukkitPlayer);
+    }
+
+    private void startTickTask() {
+        cancelTickTask();
+
+        gameTickTask = new GameTickTask();
+        gameTickTask.runTaskTimer(SimpleCTF.getInstance(), 0L, 20L);
+    }
+
+    private void cancelTickTask() {
+        if (gameTickTask == null) {
+            return;
+        }
+
+        gameTickTask.cancel();
+        gameTickTask = null;
     }
 }
