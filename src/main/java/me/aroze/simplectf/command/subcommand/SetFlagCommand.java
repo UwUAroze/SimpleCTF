@@ -60,6 +60,7 @@ public final class SetFlagCommand {
         final Location location = player.getLocation().clone();
         location.setX(location.getBlockX() + 0.5);
         location.setZ(location.getBlockZ() + 0.5);
+        location.setPitch(0);
 
         team.baseLocation(location);
         team.retrieveFlag(FlagRetrievalType.RESET, null);

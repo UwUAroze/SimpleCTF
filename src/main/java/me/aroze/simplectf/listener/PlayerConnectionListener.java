@@ -1,6 +1,7 @@
 package me.aroze.simplectf.listener;
 
 import me.aroze.simplectf.game.CTFGame;
+import me.aroze.simplectf.game.GameState;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
 import me.aroze.simplectf.util.PlayerUtil;
@@ -15,6 +16,12 @@ public final class PlayerConnectionListener implements Listener {
     @EventHandler
     public void onJoin(final PlayerJoinEvent event) {
         PlayerUtil.reset(event.getPlayer());
+
+        if (CTFGame.instance().gameState() == GameState.IN_PROGRESS) {
+            event.getPlayer().showBossBar(CTFGame.instance().bossBar());
+        } else {
+            event.getPlayer().hideBossBar(CTFGame.instance().bossBar());
+        }
     }
 
     @EventHandler

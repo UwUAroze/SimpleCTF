@@ -10,14 +10,20 @@ import me.aroze.simplectf.team.FlagRetrievalType;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.PlayerUtil;
+import me.aroze.simplectf.util.text.CtfMiniMessage;
+import me.aroze.simplectf.util.text.Unicode;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.*;
 
 /**
@@ -26,22 +32,32 @@ import java.util.*;
 @Accessors(fluent = true)
 public final class CTFGame {
 
-    /** Singleton instance of the CTFGame */
+    /**
+     * Singleton instance of the CTFGame
+     */
     @Getter
     private static final CTFGame instance = new CTFGame();
 
-    /** Number of points needed to win */
+    /**
+     * Number of points needed to win
+     */
     public static final int WINNING_SCORE = 3;
 
-    /** The current {@link GameState} */
+    /**
+     * The current {@link GameState}
+     */
     @Getter
     private GameState gameState = GameState.WAITING;
 
-    /** The bossbar shown to all players in the game */
+    /**
+     * The bossbar shown to all players in the game
+     */
     @Getter
     private final BossBar bossBar;
 
-    /** The task responsible for ticking the game timer */
+    /**
+     * The task responsible for ticking the game timer
+     */
     @Getter
     private @Nullable GameTickTask gameTickTask = null;
 
@@ -70,11 +86,8 @@ public final class CTFGame {
         gameState = GameState.IN_PROGRESS;
         startTickTask();
 
-        for (final Team team : getAllTeams()) {
-            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
-                final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
-                bukkitPlayer.showBossBar(bossBar);
-            }
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            player.showBossBar(bossBar);
         }
     }
 
@@ -84,10 +97,8 @@ public final class CTFGame {
     public void stop() {
         cancelTickTask();
 
-        for (final Team team : getAllTeams()) {
-            for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
-                ctfPlayer.bukkitPlayer().hideBossBar(bossBar);
-            }
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            player.hideBossBar(bossBar);
         }
 
         final Map<Integer, List<TeamColor>> teamScores = new HashMap<>();
@@ -115,13 +126,8 @@ public final class CTFGame {
             return;
         }
 
-        if (winningTeams.size() > 1) {
-            Bukkit.broadcast(Component.text("draw "));
-        }
-
-        winningTeams.forEach(teamColor -> {
-            Bukkit.broadcast(Component.text("winner " + teamColor.name()));
-        });
+        Bukkit.getOnlinePlayers().forEach(player -> player.playSound(player, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f));
+        displayWinners(winningTeams);
     }
 
     /**
@@ -199,9 +205,6 @@ public final class CTFGame {
 
         if (gameState == GameState.IN_PROGRESS) {
             RespawnTask.respawnPlayer(bukkitPlayer, ctfPlayer);
-            if (gameTickTask != null) {
-                bukkitPlayer.showBossBar(bossBar);
-            }
         }
     }
 
@@ -213,8 +216,6 @@ public final class CTFGame {
     public void removePlayer(final @NotNull CTFPlayer ctfPlayer) {
         final Team currentTeam = getTeam(ctfPlayer);
         final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
-
-        bukkitPlayer.hideBossBar(bossBar);
 
         if (currentTeam != null) {
             currentTeam.members().remove(ctfPlayer.uuid());
@@ -231,6 +232,44 @@ public final class CTFGame {
         bukkitPlayer.displayName(null);
         bukkitPlayer.playerListName(null);
         PlayerUtil.reset(bukkitPlayer);
+    }
+
+    private void displayWinners(final @NotNull List<TeamColor> winningTeams) {
+        if (winningTeams.isEmpty()) {
+            return;
+        }
+
+        final Component titleLine;
+        final Component winnersLine;
+
+        if (winningTeams.size() == 1) {
+            final TeamColor winningTeam = winningTeams.getFirst();
+            titleLine = Component.text("Game Over!", CtfMiniMessage.TERTIARY_COLOR);
+            winnersLine = Component.text(Unicode.CROWN + " " + winningTeam.displayName() + " Team", winningTeam.color());
+        } else {
+            titleLine = Component.text("It's a draw!", CtfMiniMessage.TERTIARY_COLOR);
+            winnersLine = Component.join(JoinConfiguration.spaces(),
+                winningTeams.stream().map(team -> Component.text(Unicode.CROWN + " " + team.displayName() + " Team", team.color())).toList()
+            );
+        }
+
+        final Title winnersTitle = Title.title(titleLine, winnersLine, Title.Times.times(
+            Duration.ZERO,
+            Duration.ofSeconds(5),
+            Duration.ofSeconds(1)
+        ));
+
+        final Component winnersMessage = Component.join(JoinConfiguration.newlines(),
+            Component.empty(),
+            titleLine,
+            winnersLine,
+            Component.empty()
+        );
+
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            player.showTitle(winnersTitle);
+            player.sendMessage(winnersMessage);
+        });
     }
 
     private void startTickTask() {

@@ -10,10 +10,10 @@ import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.game.GameState;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
+import me.aroze.simplectf.util.text.ComponentUtil;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
 import me.aroze.simplectf.util.text.Unicode;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
@@ -31,8 +31,6 @@ public final class StartGameCommand {
     private static final Component SUCCESS_GAME_STARTED = CtfMiniMessage.getInstance().deserialize("<s><tick> <p>You've started the game, enjoy!",
         Placeholder.unparsed("tick", Unicode.TICK)
     );
-
-    private static final JoinConfiguration JOIN_CONFIGURATION_MISSING_BASE_LOCATIONS = JoinConfiguration.separators(Component.text(", "), Component.text(" and "));
 
     private StartGameCommand() {
     }
@@ -56,7 +54,7 @@ public final class StartGameCommand {
         if (!missingBaseLocations.isEmpty()) {
             sender.sendMessage(CtfMiniMessage.getInstance().deserialize(
                 "<warning>Missing flag locations for <teams>",
-                Placeholder.component("teams", Component.join(JOIN_CONFIGURATION_MISSING_BASE_LOCATIONS,
+                Placeholder.component("teams", Component.join(ComponentUtil.JOIN_CONFIGURATION_COMMA_AND(),
                     missingBaseLocations.stream().map(TeamColor::formattedDisplayName).toList()
                 )))
             );

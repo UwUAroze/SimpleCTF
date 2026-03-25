@@ -104,7 +104,7 @@ public final class Team {
 
         final @Nullable GameTickTask gameTickTask = CTFGame.instance().gameTickTask();
         if (gameTickTask != null) {
-            gameTickTask.tick();
+            gameTickTask.updateVisuals();
         }
     }
 
@@ -140,7 +140,7 @@ public final class Team {
      * @param location the location to drop the flag
      * @param broadcast whether to broadcast the flag being dropped by a player
      */
-    public void dropFlag(@NotNull final Location location, final boolean broadcast) {
+    public void dropFlag(final @NotNull Location location, final boolean broadcast) {
         @Nullable CTFPlayer flagHolder = PlayerManager.getInstance().findPlayerByCarryingFlag(color);
         if (flagHolder != null) {
             flagHolder.carryingFlag(null);

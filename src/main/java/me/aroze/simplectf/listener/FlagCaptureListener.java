@@ -30,8 +30,8 @@ public final class FlagCaptureListener implements Listener {
 
         final Team otherTeam = CTFGame.instance().getTeam(ctfPlayer.carryingFlag());
 
-        playerTeam.incrementScore();
         otherTeam.retrieveFlag(FlagRetrievalType.CAPTURED, player);
+        playerTeam.incrementScore();
     }
 
 }

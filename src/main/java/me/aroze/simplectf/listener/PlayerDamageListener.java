@@ -76,13 +76,14 @@ public final class PlayerDamageListener implements Listener {
 
     private void postDeathTasks(final Player player, final @Nullable Player killer, final @Nullable Integer projectileDistance) {
         final CTFPlayer ctfPlayer = PlayerManager.getInstance().getPlayer(player);
+
+        Bukkit.broadcast(constructDeathBroadcast(player, killer, projectileDistance));
+
         final TeamColor flagColor = ctfPlayer.carryingFlag();
         if (flagColor != null) {
             final Team team = CTFGame.instance().getTeam(flagColor);
             team.dropFlag(player.getLocation(), true);
         }
-
-        Bukkit.broadcast(constructDeathBroadcast(player, killer, projectileDistance));
 
         new RespawnTask(player)
             .runTaskTimer(SimpleCTF.getInstance(), 0L, 1L);

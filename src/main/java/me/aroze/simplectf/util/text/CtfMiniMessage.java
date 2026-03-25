@@ -19,6 +19,7 @@ public final class CtfMiniMessage {
 
     public static final TextColor PRIMARY_COLOR = TextColor.color(0xF2E0FF);
     public static final TextColor SECONDARY_COLOR = TextColor.color(0xEBC7FF);
+    public static final TextColor TERTIARY_COLOR = TextColor.color(0xFFA3D1);
 
     /** Singleton instance of the built {@link MiniMessage} instance */
     @Getter
@@ -39,6 +40,7 @@ public final class CtfMiniMessage {
 
         addColorCode("p", PRIMARY_COLOR);
         addColorCode("s", SECONDARY_COLOR);
+        addColorCode("t", SECONDARY_COLOR);
 
         format.add(StandardTags.defaults());
 

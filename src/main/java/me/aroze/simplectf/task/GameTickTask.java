@@ -8,6 +8,8 @@ import me.aroze.simplectf.util.text.Unicode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -22,6 +24,10 @@ public final class GameTickTask extends BukkitRunnable {
     /** The remaining number of seconds in the game */
     private int remainingTimeSeconds = GAME_TIME_LIMIT_SECONDS;
 
+    private static final Component GAME_TIMED_OUT_MESSAGE = CtfMiniMessage.getInstance().deserialize("<s><clock> <p>The game is ending as the time limit has been reached!",
+        Placeholder.unparsed("clock", Unicode.CLOCK)
+    );
+
     @Override
     public void run() {
         if (CTFGame.instance().gameState() != GameState.IN_PROGRESS) {
@@ -29,14 +35,18 @@ public final class GameTickTask extends BukkitRunnable {
         }
 
         remainingTimeSeconds--;
-        tick();
+        updateVisuals();
 
         if (remainingTimeSeconds <= 0) {
+            Bukkit.broadcast(GAME_TIMED_OUT_MESSAGE);
             CTFGame.instance().stop();
         }
     }
 
-    public void tick() {
+    /**
+     * Instantly updates visuals (bossbar) to be upto date with info from this game tick
+     */
+    public void updateVisuals() {
         CTFGame.instance().bossBar().name(buildBossBarTitle());
         CTFGame.instance().bossBar().progress(Math.max(0f, Math.min(1f, remainingTimeSeconds / (float) GAME_TIME_LIMIT_SECONDS)));
     }

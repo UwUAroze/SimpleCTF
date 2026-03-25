@@ -17,4 +17,5 @@ public final class Unicode {
     public static final String CLOCK = "⌚";
     public static final String SWORD = "\uD83D\uDDE1";
     public static final String BOW = "\uD83C\uDFF9";
+    public static final String CROWN = "\uD83D\uDC51";
 }
