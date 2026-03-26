@@ -1,8 +1,6 @@
 package me.aroze.simplectf;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 import me.aroze.simplectf.command.CTFCommand;
 import me.aroze.simplectf.game.CTFScoreboard;
 import org.bukkit.Bukkit;
@@ -12,8 +10,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 import java.util.ServiceLoader;
 
-@Getter
-@Accessors(fluent = true)
 public final class SimpleCTF extends JavaPlugin {
 
     @Override
@@ -34,9 +30,9 @@ public final class SimpleCTF extends JavaPlugin {
     }
 
     private void registerCommands() {
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            commands.registrar().register(CTFCommand.instance().build(), List.of("simplectf", "capturetheflag"));
-        });
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands ->
+            commands.registrar().register(CTFCommand.instance().build(), List.of("simplectf", "capturetheflag"))
+        );
     }
 
     /**

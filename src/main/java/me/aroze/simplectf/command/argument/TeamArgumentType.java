@@ -14,6 +14,7 @@ import lombok.experimental.Accessors;
 import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +29,7 @@ public final class TeamArgumentType implements CustomArgumentType.Converted<Team
     );
 
     @Override
-    public TeamColor convert(final String nativeType) throws CommandSyntaxException {
+    public @NonNull TeamColor convert(final String nativeType) throws CommandSyntaxException {
         try {
             return TeamColor.valueOf(nativeType.toUpperCase());
         } catch (IllegalArgumentException ignored) {

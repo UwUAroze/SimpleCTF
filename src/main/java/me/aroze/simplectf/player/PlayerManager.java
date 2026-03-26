@@ -45,6 +45,12 @@ public final class PlayerManager {
         return this.players.computeIfAbsent(uuid, CTFPlayer::new);
     }
 
+    /**
+     * Finds the {@link CTFPlayer} that is currently carrying a flag for the specified team color, if any.
+     *
+     * @param queryTeam the {@link TeamColor} to check for a flag carrier
+     * @return the {@link CTFPlayer} carrying the query team's flag, or {@code null} if no player is carrying the flag
+     */
     public @Nullable CTFPlayer findPlayerByCarryingFlag(final TeamColor queryTeam) {
         return this.players.values().stream()
             .filter(ctfPlayer -> queryTeam.equals(ctfPlayer.carryingFlag()))

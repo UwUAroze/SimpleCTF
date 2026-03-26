@@ -21,6 +21,12 @@ public final class CTFScoreboard {
     private CTFScoreboard() {
     }
 
+    /**
+     * Gets or creates the {@link Team} for the specified {@link TeamColor}
+     *
+     * @param teamColor the team color to get the team for
+     * @return the Bukkit team associated with the specified team color
+     */
     public Team getCTFTeam(final TeamColor teamColor) {
         final Team team = this.getOrCreateTeam(teamColor.name());
         team.prefix(null);
@@ -29,6 +35,9 @@ public final class CTFScoreboard {
         return team;
     }
 
+    /**
+     * Unregisters all tracked teams from the server
+     */
     public void unregisterTeams() {
         for (final TeamColor teamColor: TeamColor.values()) {
             final @Nullable Team team = this.getScoreboard().getTeam(teamColor.name());

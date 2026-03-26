@@ -177,6 +177,7 @@ public final class Team {
     /**
      * Safely retrieves the flag to the team, removing it if dropped and respawning it at the team's base.
      *
+     * @param retrievalType the {@link FlagRetrievalType}
      * @param retriever the {@link Player} who retrieved the flag, or {@code null} if the flag is being reset without a
      * retriever.
      */

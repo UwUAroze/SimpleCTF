@@ -184,6 +184,11 @@ public final class CTFGame {
      * @param teamColor the {@link TeamColor} to set the player to
      */
     public void setTeam(final @NotNull CTFPlayer ctfPlayer, final @NotNull TeamColor teamColor) {
+        final @Nullable Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+        if (bukkitPlayer == null) {
+            return;
+        }
+
         final @Nullable Team currentTeam = this.getTeam(ctfPlayer);
         if (currentTeam != null) {
             this.removePlayer(ctfPlayer);
@@ -198,7 +203,6 @@ public final class CTFGame {
 
         ctfPlayer.teamColor(teamColor);
 
-        final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
         final Component coloredName = Component.text(bukkitPlayer.getName(), teamColor.color());
         bukkitPlayer.displayName(coloredName);
         bukkitPlayer.playerListName(coloredName);
@@ -308,7 +312,7 @@ public final class CTFGame {
 
             player.showTitle(winnersTitle);
             player.sendMessage(winnersMessage);
-        };
+        }
     }
 
     private void startTickTask() {

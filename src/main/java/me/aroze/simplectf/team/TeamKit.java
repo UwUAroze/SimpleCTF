@@ -8,6 +8,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
+/**
+ * Represents a set of constant, color matched kit items for a team
+ */
 public class TeamKit {
 
     private static final ItemStack[] SHARED_ITEMS = new ItemStack[] {
@@ -23,6 +26,12 @@ public class TeamKit {
     private final ItemStack leggings;
     private final ItemStack boots;
 
+    /**
+     * Constructs a new TeamKit for the specified team color, initializing the kit items with appropriate colors and
+     * metadata.
+     *
+     * @param teamColor the {@link TeamColor} of this team
+     */
     public TeamKit(TeamColor teamColor) {
         this.teamColor = teamColor;
 
@@ -32,6 +41,12 @@ public class TeamKit {
         this.boots = this.createDyedLeather(Material.LEATHER_BOOTS);
     }
 
+    /**
+     * Applies this kit to a player, clearing their existing inventory, adding the kit items and equipping to armor
+     * slots where applicable.
+     *
+     * @param player the {@link Player} to apply the kit to
+     */
     public void applyKit(final Player player) {
         player.getInventory().clear();
 
@@ -42,6 +57,11 @@ public class TeamKit {
         player.getInventory().setArmorContents(new ItemStack[] {this.boots, this.leggings, this.chestplate});
     }
 
+    /**
+     * Retrieves the inventory flag item for this team
+     *
+     * @return a copy of the team's inventory flag item, safe to modify if needed
+     */
     public ItemStack retrieveFlagItem() {
         return this.flagInventoryItem.clone();
     }

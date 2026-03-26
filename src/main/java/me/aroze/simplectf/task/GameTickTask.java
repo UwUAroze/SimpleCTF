@@ -52,7 +52,7 @@ public final class GameTickTask extends BukkitRunnable {
      */
     public void updateVisuals() {
         this.game.bossBar().name(this.buildBossBarTitle());
-        this.game.bossBar().progress(Math.max(0f, Math.min(1f, this.remainingTimeSeconds / (float) GAME_TIME_LIMIT_SECONDS)));
+        this.game.bossBar().progress(Math.clamp(this.remainingTimeSeconds / (float) GAME_TIME_LIMIT_SECONDS, 0f, 1f));
     }
 
     private String formatRemainingTime() {
