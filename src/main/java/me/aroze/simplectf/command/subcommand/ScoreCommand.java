@@ -42,7 +42,7 @@ public final class ScoreCommand {
 
         Component scoreMessage = CtfMiniMessage.getInstance().deserialize("<p>Current Scores:</p>");
         for (final Team team : CTFGame.instance().getAllTeams()) {
-            scoreMessage = scoreMessage.appendNewline().append(buildTeamScoreLine(team));
+            scoreMessage = scoreMessage.appendNewline().append(this.buildTeamScoreLine(team));
         }
 
         sender.sendMessage(scoreMessage);

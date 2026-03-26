@@ -65,8 +65,7 @@ public final class SetFlagCommand {
         team.baseLocation(location);
         team.retrieveFlag(FlagRetrievalType.RESET, null);
 
-        player.sendMessage(CtfMiniMessage.getInstance().deserialize(
-            "<s><tick> <p>Set flag location for <team>",
+        player.sendMessage(CtfMiniMessage.getInstance().deserialize("<s><tick> <p>Set flag location for <team>",
             Placeholder.unparsed("tick", Unicode.TICK),
             Placeholder.component("team", teamColor.formattedDisplayName())
         ));

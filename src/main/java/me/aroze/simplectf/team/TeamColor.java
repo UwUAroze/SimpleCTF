@@ -55,7 +55,7 @@ public enum TeamColor {
             "<color><icon> <name> Team</color>",
             Placeholder.styling("color", color),
             Placeholder.unparsed("icon", Unicode.FLAG),
-            Placeholder.unparsed("name", displayName)
+            Placeholder.unparsed("name", this.displayName)
         );
 
         this.kit = new TeamKit(this);

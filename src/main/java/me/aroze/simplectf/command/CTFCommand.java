@@ -11,6 +11,7 @@ import me.aroze.simplectf.command.subcommand.*;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.command.CommandSender;
 
 @Accessors(fluent = true)
@@ -50,9 +51,18 @@ public final class CTFCommand {
     }
 
     private static Component createUsageLine(final String subcommand, final String description) {
-        return CtfMiniMessage.getInstance().deserialize("\n <s>• <p>/ctf " + subcommand + " <s>- " + description)
-            .hoverEvent(CtfMiniMessage.getInstance().deserialize("<p>Click to type <s>/ctf " + subcommand))
-            .clickEvent(ClickEvent.suggestCommand("/ctf " + subcommand));
+        final String command = "/ctf " + subcommand;
+
+        return CtfMiniMessage.getInstance().deserialize(
+                "\n <s>• <p><command> <s>- <description>",
+                Placeholder.unparsed("command", command),
+                Placeholder.unparsed("description", description)
+            )
+            .hoverEvent(CtfMiniMessage.getInstance().deserialize(
+                "<p>Click to type <s><command>",
+                Placeholder.unparsed("command", command)
+            ))
+            .clickEvent(ClickEvent.suggestCommand(command));
     }
 
 }

@@ -1,14 +1,13 @@
 package me.aroze.simplectf.util.text;
 
+import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * A collection of string manipulation utilities
  */
-public final class StringUtil {
-
-    private StringUtil() {
-    }
+@UtilityClass
+public class StringUtil {
 
     /**
      * Capitalizes the first character of a string
@@ -16,7 +15,7 @@ public final class StringUtil {
      * @param input The string to capitalize
      * @return The capitalized string
      */
-    public static String capitalize(final @NotNull String input) {
+    public String capitalize(final @NotNull String input) {
         if (input.isEmpty()) return "";
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }

@@ -25,21 +25,21 @@ public final class FlagAnimationTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        isGoingUp = !isGoingUp;
+        this.isGoingUp = !this.isGoingUp;
 
-        if (!display.isValid()) {
+        if (!this.display.isValid()) {
             this.cancel();
             return;
         }
 
-        double deltaY = Y_OFFSET * (isGoingUp ? 1 : -1);
+        double deltaY = Y_OFFSET * (this.isGoingUp ? 1 : -1);
 
-        display.setTeleportDuration(ROTATION_TICKS);
+        this.display.setTeleportDuration(ROTATION_TICKS);
 
-        location.setYaw(location.getYaw() + 120);
-        location.setY(location.getY() + deltaY);
+        this.location.setYaw(this.location.getYaw() + 120);
+        this.location.setY(this.location.getY() + deltaY);
 
-        display.teleport(location);
+        this.display.teleport(this.location);
     }
 
 }

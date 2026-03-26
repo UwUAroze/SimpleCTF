@@ -38,10 +38,11 @@ public final class CTFPlayer {
     /**
      * Retrieves the associated Bukkit {@link Player}
      *
-     * @return the Bukkit {@link Player} associated with this CTFPlayer
+     * @return the Bukkit {@link Player} associated with this CTFPlayer or {@code null} if the player is no longer
+     * online
      */
-    public Player bukkitPlayer() {
-        return Bukkit.getPlayer(uuid);
+    public @Nullable Player bukkitPlayer() {
+        return Bukkit.getPlayer(this.uuid);
     }
 
 }

@@ -52,8 +52,7 @@ public final class StartGameCommand {
         }
 
         if (!missingBaseLocations.isEmpty()) {
-            sender.sendMessage(CtfMiniMessage.getInstance().deserialize(
-                "<warning>Missing flag locations for <teams>",
+            sender.sendMessage(CtfMiniMessage.getInstance().deserialize("<warning>Missing flag locations for <teams>",
                 Placeholder.component("teams", Component.join(ComponentUtil.JOIN_CONFIGURATION_COMMA_AND(),
                     missingBaseLocations.stream().map(TeamColor::formattedDisplayName).toList()
                 )))

@@ -36,15 +36,15 @@ public final class CtfMiniMessage {
      * @return The {@link MiniMessage} instance
      */
     public MiniMessage build() {
-        addPreProcessed("warning", "<#ff6e6e>⚠ <#ff7f6e>");
+        this.addPreProcessed("warning", "<#ff6e6e>⚠ <#ff7f6e>");
 
-        addColorCode("p", PRIMARY_COLOR);
-        addColorCode("s", SECONDARY_COLOR);
-        addColorCode("t", SECONDARY_COLOR);
+        this.addColorCode("p", PRIMARY_COLOR);
+        this.addColorCode("s", SECONDARY_COLOR);
+        this.addColorCode("t", SECONDARY_COLOR);
 
-        format.add(StandardTags.defaults());
+        this.format.add(StandardTags.defaults());
 
-        val resolvers = TagResolver.resolver(format);
+        val resolvers = TagResolver.resolver(this.format);
 
         return MiniMessage.builder()
             .tags(resolvers)
@@ -56,11 +56,11 @@ public final class CtfMiniMessage {
     }
 
     private void addColorCode(final String code, final TextColor textColor) {
-        format.add(TagResolver.resolver(code, Tag.styling(textColor)));
+        this.format.add(TagResolver.resolver(code, Tag.styling(textColor)));
     }
 
     private void addPreProcessed(final String tag, final String preProcessed) {
-        format.add(TagResolver.resolver(TagResolver.resolver(tag, Tag.preProcessParsed(preProcessed))));
+        this.format.add(TagResolver.resolver(TagResolver.resolver(tag, Tag.preProcessParsed(preProcessed))));
     }
 
 }

@@ -5,7 +5,6 @@ import lombok.experimental.Accessors;
 import me.aroze.simplectf.SimpleCTF;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.task.GameTickTask;
-import me.aroze.simplectf.task.RespawnTask;
 import me.aroze.simplectf.team.FlagRetrievalType;
 import me.aroze.simplectf.team.Team;
 import me.aroze.simplectf.team.TeamColor;
@@ -17,6 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -32,32 +32,22 @@ import java.util.*;
 @Accessors(fluent = true)
 public final class CTFGame {
 
-    /**
-     * Singleton instance of the CTFGame
-     */
+    /** Singleton instance of the CTFGame */
     @Getter
     private static final CTFGame instance = new CTFGame();
 
-    /**
-     * Number of points needed to win
-     */
+    /** Number of points needed to win */
     public static final int WINNING_SCORE = 3;
 
-    /**
-     * The current {@link GameState}
-     */
+    /** The current {@link GameState} */
     @Getter
     private GameState gameState = GameState.WAITING;
 
-    /**
-     * The bossbar shown to all players in the game
-     */
+    /** The bossbar shown to all players in the game */
     @Getter
     private final BossBar bossBar;
 
-    /**
-     * The task responsible for ticking the game timer
-     */
+    /** The task responsible for ticking the game timer */
     @Getter
     private @Nullable GameTickTask gameTickTask = null;
 
@@ -65,7 +55,7 @@ public final class CTFGame {
 
     private CTFGame() {
         for (final TeamColor teamColor : TeamColor.values()) {
-            teams.put(teamColor, new Team(teamColor));
+            this.teams.put(teamColor, new Team(teamColor, this));
         }
 
         this.bossBar = BossBar.bossBar(Component.empty(), 1.0f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
@@ -75,19 +65,19 @@ public final class CTFGame {
      * Starts (or restarts) the game, teleporting all queued players to their base locations & populating inventories.
      */
     public void start() {
-        for (final Team team : getAllTeams()) {
+        for (final Team team : this.getAllTeams()) {
             team.retrieveFlag(FlagRetrievalType.RESET, null);
 
             for (final CTFPlayer ctfPlayer : team.ctfPlayers()) {
-                RespawnTask.respawnPlayer(ctfPlayer.bukkitPlayer(), ctfPlayer);
+                this.respawnPlayer(ctfPlayer.bukkitPlayer(), ctfPlayer);
             }
         }
 
-        gameState = GameState.IN_PROGRESS;
-        startTickTask();
+        this.gameState = GameState.IN_PROGRESS;
+        this.startTickTask();
 
         for (final Player player : Bukkit.getOnlinePlayers()) {
-            player.showBossBar(bossBar);
+            player.showBossBar(this.bossBar);
         }
     }
 
@@ -95,16 +85,16 @@ public final class CTFGame {
      * Stops the game, declares winners & resets all game state along with clearing inventories
      */
     public void stop() {
-        cancelTickTask();
+        this.cancelTickTask();
 
         for (final Player player : Bukkit.getOnlinePlayers()) {
-            player.hideBossBar(bossBar);
+            player.hideBossBar(this.bossBar);
         }
 
         final Map<Integer, List<TeamColor>> teamScores = new HashMap<>();
         int highestScore = 0;
 
-        for (final Team team : getAllTeams()) {
+        for (final Team team : this.getAllTeams()) {
             final int score = team.score();
             teamScores.computeIfAbsent(score, ArrayList::new).add(team.color());
             if (score > highestScore) {
@@ -119,15 +109,21 @@ public final class CTFGame {
             team.reset();
         }
 
-        gameState = GameState.WAITING;
+        this.gameState = GameState.WAITING;
 
         final List<TeamColor> winningTeams = teamScores.get(highestScore);
         if (winningTeams.isEmpty()) {
             return;
         }
 
-        Bukkit.getOnlinePlayers().forEach(player -> player.playSound(player, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f));
-        displayWinners(winningTeams);
+        for (final UUID uuid : this.getAllPlayers()) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+
+            player.playSound(player, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
+        }
+
+        this.displayWinners(winningTeams);
     }
 
     /**
@@ -138,7 +134,7 @@ public final class CTFGame {
      */
     @NotNull
     public Team getTeam(final @NotNull TeamColor teamColor) {
-        return teams.get(teamColor);
+        return this.teams.get(teamColor);
     }
 
     /**
@@ -147,7 +143,7 @@ public final class CTFGame {
      * @return collection of all teams in the game
      */
     public Collection<Team> getAllTeams() {
-        return teams.values();
+        return this.teams.values();
     }
 
     /**
@@ -156,15 +152,16 @@ public final class CTFGame {
      * @return collection of all player UUIDs in the game
      */
     public Collection<UUID> getAllPlayers() {
-        Collection<UUID> players = new ArrayList<>(List.of());
-        for (Team team : getAllTeams()) {
+        Collection<UUID> players = new ArrayList<>();
+        for (Team team : this.getAllTeams()) {
             players.addAll(team.members());
         }
         return players;
     }
 
     /**
-     * Retrieves {@link Team} info by checking what team {@link CTFPlayer} belongs to, may be {@code null} if the player is not in a team
+     * Retrieves {@link Team} info by checking what team {@link CTFPlayer} belongs to, may be {@code null} if the player
+     * is not in a team
      *
      * @param ctfPlayer the {@link CTFPlayer} for which to retrieve the team
      * @return the {@link Team} instance or {@code null} if the player is not on any team
@@ -176,23 +173,27 @@ public final class CTFGame {
             return null;
         }
 
-        return teams.get(color);
+        return this.teams.get(color);
     }
 
     /**
-     * Sets the team for a {@link CTFPlayer}. If the player is already on a team, they will be removed from that team before being added to the new one.
+     * Sets the team for a {@link CTFPlayer}. If the player is already on a team, they will be removed from that team
+     * before being added to the new one.
      *
      * @param ctfPlayer the {@link CTFPlayer} for which to set the team
      * @param teamColor the {@link TeamColor} to set the player to
      */
     public void setTeam(final @NotNull CTFPlayer ctfPlayer, final @NotNull TeamColor teamColor) {
-        final Team currentTeam = getTeam(ctfPlayer);
-
+        final @Nullable Team currentTeam = this.getTeam(ctfPlayer);
         if (currentTeam != null) {
-            removePlayer(ctfPlayer);
+            this.removePlayer(ctfPlayer);
         }
 
-        final Team newTeam = teams.get(teamColor);
+        final @Nullable Team newTeam = this.teams.get(teamColor);
+        if (newTeam == null) {
+            return;
+        }
+
         newTeam.members().add(ctfPlayer.uuid());
 
         ctfPlayer.teamColor(teamColor);
@@ -201,10 +202,11 @@ public final class CTFGame {
         final Component coloredName = Component.text(bukkitPlayer.getName(), teamColor.color());
         bukkitPlayer.displayName(coloredName);
         bukkitPlayer.playerListName(coloredName);
+
         CTFScoreboard.instance().getCTFTeam(teamColor).addPlayer(bukkitPlayer);
 
-        if (gameState == GameState.IN_PROGRESS) {
-            RespawnTask.respawnPlayer(bukkitPlayer, ctfPlayer);
+        if (this.gameState == GameState.IN_PROGRESS) {
+            this.respawnPlayer(bukkitPlayer, ctfPlayer);
         }
     }
 
@@ -214,8 +216,11 @@ public final class CTFGame {
      * @param ctfPlayer the {@link CTFPlayer} to remove from the game
      */
     public void removePlayer(final @NotNull CTFPlayer ctfPlayer) {
-        final Team currentTeam = getTeam(ctfPlayer);
-        final Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+        final @Nullable Team currentTeam = this.getTeam(ctfPlayer);
+        final @Nullable Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+        if (bukkitPlayer == null) {
+            return;
+        }
 
         if (currentTeam != null) {
             currentTeam.members().remove(ctfPlayer.uuid());
@@ -223,8 +228,8 @@ public final class CTFGame {
         }
 
         if (ctfPlayer.carryingFlag() != null) {
-            final Team flagTeam = teams.get(ctfPlayer.carryingFlag());
-            flagTeam.dropFlag(ctfPlayer.bukkitPlayer().getLocation(), true);
+            final Team flagTeam = this.teams.get(ctfPlayer.carryingFlag());
+            flagTeam.dropFlag(bukkitPlayer.getLocation(), true);
         }
 
         ctfPlayer.teamColor(null);
@@ -232,6 +237,37 @@ public final class CTFGame {
         bukkitPlayer.displayName(null);
         bukkitPlayer.playerListName(null);
         PlayerUtil.reset(bukkitPlayer);
+    }
+
+    /**
+     * Respawns the player, teleporting them to their spawn, resetting their health & other attributes along with
+     * applying their team kit if they are in the game.
+     *
+     * @param player the {@link Player} to respawn
+     * @param ctfPlayer the {@link CTFPlayer} representation of the player to respawn
+     */
+    public void respawnPlayer(final Player player, final CTFPlayer ctfPlayer) {
+        PlayerUtil.reset(player);
+        player.clearTitle();
+        player.teleport(this.getRespawnLocation(player, ctfPlayer));
+        player.setGameMode(GameMode.SURVIVAL);
+
+        final @Nullable TeamColor teamColor = ctfPlayer.teamColor();
+        if (teamColor != null) {
+            teamColor.kit().applyKit(player);
+        }
+    }
+
+    private Location getRespawnLocation(final Player player, final CTFPlayer ctfPlayer) {
+        final @Nullable TeamColor teamColor = ctfPlayer.teamColor();
+        if (teamColor == null) {
+            return player.getWorld().getSpawnLocation(); // Fallback, e.g. player left the game while respawning
+        }
+
+        final Team team = this.getTeam(teamColor);
+        return team.baseLocation() == null
+            ? player.getWorld().getSpawnLocation() // Shouldn't happen!
+            : team.baseLocation();
     }
 
     private void displayWinners(final @NotNull List<TeamColor> winningTeams) {
@@ -266,25 +302,28 @@ public final class CTFGame {
             Component.empty()
         );
 
-        Bukkit.getOnlinePlayers().forEach(player -> {
+        for (final UUID uuid : this.getAllPlayers()) {
+            final Player player = Bukkit.getPlayer(uuid);
+            if (player == null) continue;
+
             player.showTitle(winnersTitle);
             player.sendMessage(winnersMessage);
-        });
+        };
     }
 
     private void startTickTask() {
-        cancelTickTask();
+        this.cancelTickTask();
 
-        gameTickTask = new GameTickTask();
-        gameTickTask.runTaskTimer(SimpleCTF.getInstance(), 0L, 20L);
+        this.gameTickTask = new GameTickTask(this);
+        this.gameTickTask.runTaskTimer(SimpleCTF.instance(), 0L, 20L);
     }
 
     private void cancelTickTask() {
-        if (gameTickTask == null) {
+        if (this.gameTickTask == null) {
             return;
         }
 
-        gameTickTask.cancel();
-        gameTickTask = null;
+        this.gameTickTask.cancel();
+        this.gameTickTask = null;
     }
 }

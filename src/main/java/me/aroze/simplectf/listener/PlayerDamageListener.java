@@ -1,5 +1,6 @@
 package me.aroze.simplectf.listener;
 
+import com.google.auto.service.AutoService;
 import me.aroze.simplectf.SimpleCTF;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.game.GameState;
@@ -24,6 +25,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jetbrains.annotations.Nullable;
 
+@AutoService(Listener.class)
 public final class PlayerDamageListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -64,20 +66,20 @@ public final class PlayerDamageListener implements Listener {
         if (event.getFinalDamage() < victim.getHealth()) return; // Damage didn't result in kill.
 
         event.setDamage(0.0);
-        postDeathTasks(victim, damagerPlayer, projectileDistance);
+        this.postDeathTasks(victim, damagerPlayer, projectileDistance);
     }
 
     @EventHandler
     public void onDeath(final PlayerDeathEvent event) {
         event.setCancelled(true);
         final Player player = event.getEntity();
-        postDeathTasks(player, player.getKiller(), null);
+        this.postDeathTasks(player, player.getKiller(), null);
     }
 
     private void postDeathTasks(final Player player, final @Nullable Player killer, final @Nullable Integer projectileDistance) {
         final CTFPlayer ctfPlayer = PlayerManager.getInstance().getPlayer(player);
 
-        Bukkit.broadcast(constructDeathBroadcast(player, killer, projectileDistance));
+        Bukkit.broadcast(this.constructDeathBroadcast(player, killer, projectileDistance));
 
         final TeamColor flagColor = ctfPlayer.carryingFlag();
         if (flagColor != null) {
@@ -85,8 +87,9 @@ public final class PlayerDamageListener implements Listener {
             team.dropFlag(player.getLocation(), true);
         }
 
-        new RespawnTask(player)
-            .runTaskTimer(SimpleCTF.getInstance(), 0L, 1L);
+        final RespawnTask task = new RespawnTask(CTFGame.instance(), player);
+        task.start();
+        task.runTaskTimer(SimpleCTF.instance(), 0L, 1L);
 
         if (killer != null) {
             killer.playSound(killer, Sound.BLOCK_AMETHYST_BLOCK_BREAK, 1f, 1f);

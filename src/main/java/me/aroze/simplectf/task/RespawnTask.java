@@ -3,20 +3,16 @@ package me.aroze.simplectf.task;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.player.CTFPlayer;
 import me.aroze.simplectf.player.PlayerManager;
-import me.aroze.simplectf.team.Team;
-import me.aroze.simplectf.team.TeamColor;
 import me.aroze.simplectf.util.PlayerUtil;
 import me.aroze.simplectf.util.text.CtfMiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.title.Title;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.List;
@@ -24,59 +20,41 @@ import java.util.List;
 /**
  * A task to respawn the player with a preceding death/respawning sequence.
  *
- * @see #respawnPlayer(Player, CTFPlayer) to instantly respawn the player.
+ * @see CTFGame#respawnPlayer(Player, CTFPlayer) to instantly respawn the player.
  */
 public final class RespawnTask extends BukkitRunnable {
 
     private static final int RESPAWN_TICKS = 60;
 
+    private final CTFGame game;
     private final Player player;
     private final CTFPlayer ctfPlayer;
 
     private int ticksElapsed = 0;
 
-    public RespawnTask(final Player player) {
+    public RespawnTask(final CTFGame game, final Player player) {
+        this.game = game;
         this.player = player;
-        ctfPlayer = PlayerManager.getInstance().getPlayer(player);
-
-        if (ctfPlayer.isRespawning()) {
-            return;
-        }
-
-        PlayerUtil.reset(player);
-        ctfPlayer.isRespawning(true);
-        player.setGameMode(GameMode.SPECTATOR);
-
-        player.playSound(player, Sound.ENTITY_ALLAY_DEATH, 1f, 1f);
-        player.playSound(player, Sound.ENTITY_ALLAY_DEATH, 1f, 2f);
-
-        player.addPotionEffects(List.of(
-            new PotionEffect(PotionEffectType.BLINDNESS, 55, 0),
-            new PotionEffect(PotionEffectType.SLOWNESS, PotionEffect.INFINITE_DURATION, 0)
-        ));
-
-        player.setFlySpeed(0.0f);
-        player.setAllowFlight(true);
-        player.setFlying(true);
+        this.ctfPlayer = PlayerManager.getInstance().getPlayer(player);
     }
 
     @Override
     public void run() {
-        ticksElapsed++;
+        this.ticksElapsed++;
 
-        if (!player.isValid()) {
-            ctfPlayer.isRespawning(false);
-            cancel();
+        if (!this.player.isValid()) {
+            this.ctfPlayer.isRespawning(false);
+            this.cancel();
             return;
         }
 
-        player.setAllowFlight(true);
-        player.setFlying(true);
+        this.player.setAllowFlight(true);
+        this.player.setFlying(true);
 
-        player.showTitle(Title.title(
+        this.player.showTitle(Title.title(
             CtfMiniMessage.getInstance().deserialize("<#ff6378>☠ You died!"),
             CtfMiniMessage.getInstance().deserialize("<#e3bac0>Respawning in <#ffb3bf><seconds> seconds...",
-                Placeholder.unparsed("seconds", String.format("%.1f", (RESPAWN_TICKS - ticksElapsed) / 20.0))
+                Placeholder.unparsed("seconds", String.format("%.1f", (RESPAWN_TICKS - this.ticksElapsed) / 20.0))
             ),
             Title.Times.times(
                 Duration.ZERO,
@@ -85,41 +63,35 @@ public final class RespawnTask extends BukkitRunnable {
             )
         ));
 
-        if (ticksElapsed >= RESPAWN_TICKS) {
-            respawnPlayer(player, ctfPlayer);
-            ctfPlayer.isRespawning(false);
-            cancel();
+        if (this.ticksElapsed >= RESPAWN_TICKS) {
+            this.game.respawnPlayer(this.player, this.ctfPlayer);
+            this.ctfPlayer.isRespawning(false);
+            this.cancel();
         }
     }
 
     /**
-     * Respawns the player, teleporting them to their spawn, resetting their health & other attributes along with
-     * applying their team kit if they are in the game.
-     *
-     * @param player the {@link Player} to respawn
-     * @param ctfPlayer the {@link CTFPlayer} representation of the player to respawn
+     * Starts the respawn sequence for the player
      */
-    public static void respawnPlayer(final Player player, final CTFPlayer ctfPlayer) {
-        PlayerUtil.reset(player);
-        player.clearTitle();
-        player.teleport(getRespawnLocation(ctfPlayer));
-        player.setGameMode(GameMode.SURVIVAL);
-
-        final @Nullable TeamColor teamColor = ctfPlayer.teamColor();
-        if (teamColor != null) {
-            teamColor.kit().applyKit(player);
-        }
-    }
-
-    private static Location getRespawnLocation(final CTFPlayer player) {
-        final @Nullable TeamColor teamColor = player.teamColor();
-        if (teamColor == null) {
-            return player.bukkitPlayer().getWorld().getSpawnLocation(); // Fallback, e.g. player left the game while respawning
+    public void start() {
+        if (this.ctfPlayer.isRespawning()) {
+            return;
         }
 
-        final Team team = CTFGame.instance().getTeam(teamColor);
-        return team.baseLocation() == null
-            ? player.bukkitPlayer().getWorld().getSpawnLocation() // Shouldn't happen!
-            : team.baseLocation();
+        PlayerUtil.reset(this.player);
+        this.ctfPlayer.isRespawning(true);
+        this.player.setGameMode(GameMode.SPECTATOR);
+
+        this.player.playSound(this.player, Sound.ENTITY_ALLAY_DEATH, 1f, 1f);
+        this.player.playSound(this.player, Sound.ENTITY_ALLAY_DEATH, 1f, 2f);
+
+        this.player.addPotionEffects(List.of(
+            new PotionEffect(PotionEffectType.BLINDNESS, 55, 0),
+            new PotionEffect(PotionEffectType.SLOWNESS, PotionEffect.INFINITE_DURATION, 0)
+        ));
+
+        this.player.setFlySpeed(0.0f);
+        this.player.setAllowFlight(true);
+        this.player.setFlying(true);
     }
 }

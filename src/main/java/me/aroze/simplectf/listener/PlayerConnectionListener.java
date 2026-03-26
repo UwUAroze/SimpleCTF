@@ -1,5 +1,6 @@
 package me.aroze.simplectf.listener;
 
+import com.google.auto.service.AutoService;
 import me.aroze.simplectf.game.CTFGame;
 import me.aroze.simplectf.game.GameState;
 import me.aroze.simplectf.player.CTFPlayer;
@@ -11,6 +12,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.Nullable;
 
+@AutoService(Listener.class)
 public final class PlayerConnectionListener implements Listener {
 
     @EventHandler

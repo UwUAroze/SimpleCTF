@@ -52,8 +52,7 @@ public final class JoinCommand {
         final TeamColor newTeam = command.getArgument("team", TeamColor.class);
 
         if (currentTeam == newTeam) {
-            player.sendMessage(CtfMiniMessage.getInstance().deserialize(
-                "<warning>You're already on <team>",
+            player.sendMessage(CtfMiniMessage.getInstance().deserialize("<warning>You're already on <team>",
                 Placeholder.component("team", newTeam.formattedDisplayName())
             ));
             return Command.SINGLE_SUCCESS;
@@ -65,8 +64,7 @@ public final class JoinCommand {
 
         CTFGame.instance().setTeam(ctfPlayer, newTeam);
 
-        player.sendMessage(CtfMiniMessage.getInstance().deserialize(
-            "<s><arrow> <p>You've <action> <team>",
+        player.sendMessage(CtfMiniMessage.getInstance().deserialize("<s><arrow> <p>You've <action> <team>",
             Placeholder.unparsed("arrow", Unicode.RIGHT_ARROW),
             Placeholder.unparsed("action", action),
             Placeholder.component("team", newTeam.formattedDisplayName())

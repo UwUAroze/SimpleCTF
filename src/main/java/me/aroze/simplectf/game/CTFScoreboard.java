@@ -8,6 +8,9 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Manages the scoreboard teams used for coloring player names according to their team.
+ */
 @Accessors(fluent = true)
 public final class CTFScoreboard {
 

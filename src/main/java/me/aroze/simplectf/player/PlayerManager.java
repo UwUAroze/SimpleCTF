@@ -31,7 +31,7 @@ public final class PlayerManager {
      * @return the player's {@link CTFPlayer} instance
      */
     public CTFPlayer getPlayer(final Player player) {
-        return getPlayer(player.getUniqueId());
+        return this.getPlayer(player.getUniqueId());
     }
 
     /**
@@ -42,11 +42,11 @@ public final class PlayerManager {
      * @return the player's {@link CTFPlayer} instance
      */
     public CTFPlayer getPlayer(final UUID uuid) {
-        return players.computeIfAbsent(uuid, CTFPlayer::new);
+        return this.players.computeIfAbsent(uuid, CTFPlayer::new);
     }
 
     public @Nullable CTFPlayer findPlayerByCarryingFlag(final TeamColor queryTeam) {
-        return players.values().stream()
+        return this.players.values().stream()
             .filter(ctfPlayer -> queryTeam.equals(ctfPlayer.carryingFlag()))
             .findFirst()
             .orElse(null);
@@ -60,7 +60,7 @@ public final class PlayerManager {
      */
     @Nullable
     public CTFPlayer removePlayer(UUID uuid) {
-        return players.remove(uuid);
+        return this.players.remove(uuid);
     }
 
 }

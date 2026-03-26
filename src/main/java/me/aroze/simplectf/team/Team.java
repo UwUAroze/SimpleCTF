@@ -49,6 +49,9 @@ public final class Team {
     /** The {@link TeamColor} of this team */
     private final TeamColor color;
 
+    /** The {@link CTFGame} this team is a part of */
+    private final CTFGame game;
+
     /** The UUIDs of all members in this team */
     private final List<UUID> members = new ArrayList<>();
 
@@ -77,7 +80,7 @@ public final class Team {
      * @return all {@link CTFPlayer} in the team
      */
     public Collection<CTFPlayer> ctfPlayers() {
-        return members.stream()
+        return this.members.stream()
             .map(PlayerManager.getInstance()::getPlayer)
             .toList();
     }
@@ -88,7 +91,7 @@ public final class Team {
      * @return {@code true} if the flag is at the team's base, or {@code false} if dropped elsewhere
      */
     public boolean isFlagAtBase() {
-        return droppedFlagLocation == baseLocation;
+        return this.droppedFlagLocation == this.baseLocation;
     }
 
     /**
@@ -96,13 +99,13 @@ public final class Team {
      * necessary.
      */
     public void incrementScore() {
-        score++;
-        if (score >= CTFGame.WINNING_SCORE) {
-            CTFGame.instance().stop();
+        this.score++;
+        if (this.score >= CTFGame.WINNING_SCORE) {
+            this.game.stop();
             return;
         }
 
-        final @Nullable GameTickTask gameTickTask = CTFGame.instance().gameTickTask();
+        final @Nullable GameTickTask gameTickTask = this.game.gameTickTask();
         if (gameTickTask != null) {
             gameTickTask.updateVisuals();
         }
@@ -113,11 +116,14 @@ public final class Team {
      * members).
      */
     public void reset() {
-        score = 0;
-        retrieveFlag(FlagRetrievalType.RESET, null);
+        this.score = 0;
+        this.retrieveFlag(FlagRetrievalType.RESET, null);
 
         for (final CTFPlayer ctfPlayer : this.ctfPlayers()) {
-            PlayerUtil.reset(ctfPlayer.bukkitPlayer());
+            final @Nullable Player bukkitPlayer = ctfPlayer.bukkitPlayer();
+            if (bukkitPlayer == null) continue;
+
+            PlayerUtil.reset(bukkitPlayer);
         }
     }
 
@@ -129,8 +135,8 @@ public final class Team {
      * @return {@code true} if the Location is in the base, otherwise {@code false}
      */
     public boolean isInBase(final Location location) {
-        if (baseLocation == null) return false;
-        return location.distanceSquared(baseLocation) < BASE_RADIUS_SQUARED;
+        if (this.baseLocation == null) return false;
+        return location.distanceSquared(this.baseLocation) < BASE_RADIUS_SQUARED;
     }
 
     /**
@@ -141,18 +147,22 @@ public final class Team {
      * @param broadcast whether to broadcast the flag being dropped by a player
      */
     public void dropFlag(final @NotNull Location location, final boolean broadcast) {
-        @Nullable CTFPlayer flagHolder = PlayerManager.getInstance().findPlayerByCarryingFlag(color);
+        @Nullable CTFPlayer flagHolder = PlayerManager.getInstance().findPlayerByCarryingFlag(this.color);
         if (flagHolder != null) {
             flagHolder.carryingFlag(null);
-            flagHolder.bukkitPlayer().getInventory().setHelmet(null);
-            if (broadcast) {
-                Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been dropped by <player></color>", flagHolder.bukkitPlayer()));
+
+            final @Nullable Player player = flagHolder.bukkitPlayer();
+            if (player != null) {
+                player.getInventory().setHelmet(null);
+                if (broadcast) {
+                    Bukkit.broadcast(this.formatFlagBroadcast("<color><team>'s flag has been dropped by <player></color>", player));
+                }
             }
         }
 
-        destroyFlag(null);
-        droppedFlagLocation = location;
-        validateEntities();
+        this.destroyFlag(null);
+        this.droppedFlagLocation = location;
+        this.validateEntities();
     }
 
     /**
@@ -160,8 +170,8 @@ public final class Team {
      * them if necessary
      */
     public void validateEntities() {
-        validateFlagDisplay();
-        validateFlagInteraction();
+        this.validateFlagDisplay();
+        this.validateFlagInteraction();
     }
 
     /**
@@ -171,11 +181,11 @@ public final class Team {
      * retriever.
      */
     public void retrieveFlag(final FlagRetrievalType retrievalType, final @Nullable Player retriever) {
-        if (baseLocation == null) {
+        if (this.baseLocation == null) {
             return;
         }
 
-        dropFlag(baseLocation, false);
+        this.dropFlag(this.baseLocation, false);
 
         if (retriever == null) {
             return;
@@ -183,13 +193,13 @@ public final class Team {
 
         if (retrievalType == FlagRetrievalType.RETURNED) {
             retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
-            Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been returned by <player></color>", retriever));
+            Bukkit.broadcast(this.formatFlagBroadcast("<color><team>'s flag has been returned by <player></color>", retriever));
             return;
         }
 
         if (retrievalType == FlagRetrievalType.CAPTURED) {
             retriever.playSound(retriever, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 0.5f);
-            Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been captured by <player></color>", retriever));
+            Bukkit.broadcast(this.formatFlagBroadcast("<color><team>'s flag has been captured by <player></color>", retriever));
         }
     }
 
@@ -200,48 +210,49 @@ public final class Team {
      * @param capturer The {@link Player} who captured the flag, or {@code null} if the flag is not being captured
      */
     public void destroyFlag(final @Nullable Player capturer) {
-        final @Nullable BlockDisplay flagDisplay = getFlagDisplay();
+        final @Nullable BlockDisplay flagDisplay = this.getFlagDisplay();
         if (flagDisplay != null) {
             flagDisplay.remove();
-            flagDisplayUUID = null;
+            this.flagDisplayUUID = null;
         }
 
-        final @Nullable Interaction flagInteraction = getFlagInteraction();
+        final @Nullable Interaction flagInteraction = this.getFlagInteraction();
         if (flagInteraction != null) {
             flagInteraction.remove();
-            flagInteractionUUID = null;
+            this.flagInteractionUUID = null;
         }
 
-        if (flagAnimationTaskId != null) {
-            Bukkit.getScheduler().cancelTask(flagAnimationTaskId);
+        if (this.flagAnimationTaskId != null) {
+            Bukkit.getScheduler().cancelTask(this.flagAnimationTaskId);
+            this.flagAnimationTaskId = null;
         }
 
-        droppedFlagLocation = null;
+        this.droppedFlagLocation = null;
 
         if (capturer != null) {
             final CTFPlayer ctfPlayer = PlayerManager.getInstance().getPlayer(capturer.getUniqueId());
-            ctfPlayer.carryingFlag(color);
+            ctfPlayer.carryingFlag(this.color);
 
-            capturer.getInventory().setHelmet(color.kit().retrieveFlagItem());
+            capturer.getInventory().setHelmet(this.color.kit().retrieveFlagItem());
             capturer.playSound(capturer, Sound.BLOCK_NOTE_BLOCK_BIT, 1f, 2f);
-            Bukkit.broadcast(formatFlagBroadcast("<color><team>'s flag has been picked up by <player></color>", capturer));
+            Bukkit.broadcast(this.formatFlagBroadcast("<color><team>'s flag has been picked up by <player></color>", capturer));
         }
     }
 
     private Component formatFlagBroadcast(final String input, final Player player) {
         return CtfMiniMessage.getInstance().deserialize(input,
-            Placeholder.styling("color", color.color()),
-            Placeholder.component("team", color.formattedDisplayName()),
+            Placeholder.styling("color", this.color.color()),
+            Placeholder.component("team", this.color.formattedDisplayName()),
             Placeholder.component("player", player.displayName())
         );
     }
 
     private @Nullable BlockDisplay getFlagDisplay() {
-        if (flagDisplayUUID == null) {
+        if (this.flagDisplayUUID == null) {
             return null;
         }
 
-        final @Nullable Entity entity = Bukkit.getEntity(flagDisplayUUID);
+        final @Nullable Entity entity = Bukkit.getEntity(this.flagDisplayUUID);
         if (entity == null || !entity.isValid() || !(entity instanceof BlockDisplay)) {
             return null;
         }
@@ -250,11 +261,11 @@ public final class Team {
     }
 
     private @Nullable Interaction getFlagInteraction() {
-        if (flagInteractionUUID == null) {
+        if (this.flagInteractionUUID == null) {
             return null;
         }
 
-        final @Nullable Entity entity = Bukkit.getEntity(flagInteractionUUID);
+        final @Nullable Entity entity = Bukkit.getEntity(this.flagInteractionUUID);
         if (entity == null || !entity.isValid() || !(entity instanceof Interaction)) {
             return null;
         }
@@ -263,16 +274,16 @@ public final class Team {
     }
 
     private void validateFlagDisplay() {
-        if (droppedFlagLocation == null) {
+        if (this.droppedFlagLocation == null) {
             return;
         }
 
-        @Nullable BlockDisplay display = getFlagDisplay();
+        @Nullable BlockDisplay display = this.getFlagDisplay();
         if (display != null) {
             return;
         }
 
-        final Location location = droppedFlagLocation.clone();
+        final Location location = this.droppedFlagLocation.clone();
         location.setPitch(0);
         location.setY(location.getY() + 0.3); // Shifting up since we scale the model down
 
@@ -287,29 +298,29 @@ public final class Team {
 
         display.teleport(location);
         display.setTransformation(transformation);
-        display.setBlock(color.flagType().createBlockData());
+        display.setBlock(this.color.flagType().createBlockData());
         display.setGlowing(true);
-        display.setGlowColorOverride(color.bukkitColor());
+        display.setGlowColorOverride(this.color.bukkitColor());
         display.setTeleportDuration(FlagAnimationTask.ROTATION_TICKS());
         display.setPersistent(false);
-        flagDisplayUUID = display.getUniqueId();
+        this.flagDisplayUUID = display.getUniqueId();
 
-        flagAnimationTaskId = new FlagAnimationTask(display)
-            .runTaskTimer(SimpleCTF.getInstance(), 2, FlagAnimationTask.ROTATION_TICKS())
+        this.flagAnimationTaskId = new FlagAnimationTask(display)
+            .runTaskTimer(SimpleCTF.instance(), 2, FlagAnimationTask.ROTATION_TICKS())
             .getTaskId();
     }
 
     private void validateFlagInteraction() {
-        if (droppedFlagLocation == null) {
+        if (this.droppedFlagLocation == null) {
             return;
         }
 
-        @Nullable Interaction interaction = getFlagInteraction();
+        @Nullable Interaction interaction = this.getFlagInteraction();
         if (interaction != null) {
             return;
         }
 
-        final Location location = droppedFlagLocation.clone();
+        final Location location = this.droppedFlagLocation.clone();
         location.setY(location.getY() + 0.3); // Shifting up since we scale the model down
 
         interaction = location.getWorld().spawn(location, Interaction.class);
@@ -317,7 +328,7 @@ public final class Team {
         interaction.setInteractionHeight(1.7f);
         interaction.setPersistent(false);
 
-        flagInteractionUUID = interaction.getUniqueId();
+        this.flagInteractionUUID = interaction.getUniqueId();
     }
 
 }

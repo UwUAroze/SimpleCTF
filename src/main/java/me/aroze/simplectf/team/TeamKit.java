@@ -26,33 +26,32 @@ public class TeamKit {
     public TeamKit(TeamColor teamColor) {
         this.teamColor = teamColor;
 
-        this.flagInventoryItem = createFlagItem();
-        this.chestplate = createDyedLeather(Material.LEATHER_CHESTPLATE);
-        this.leggings = createDyedLeather(Material.LEATHER_LEGGINGS);
-        this.boots = createDyedLeather(Material.LEATHER_BOOTS);
+        this.flagInventoryItem = this.createFlagItem();
+        this.chestplate = this.createDyedLeather(Material.LEATHER_CHESTPLATE);
+        this.leggings = this.createDyedLeather(Material.LEATHER_LEGGINGS);
+        this.boots = this.createDyedLeather(Material.LEATHER_BOOTS);
     }
 
     public void applyKit(final Player player) {
         player.getInventory().clear();
 
         for (final ItemStack sharedItem : SHARED_ITEMS) {
-            player.getInventory().addItem(sharedItem.clone());
+            player.getInventory().addItem(sharedItem);
         }
 
-        player.getInventory().setArmorContents(new ItemStack[] {boots.clone(), leggings.clone(), chestplate.clone()});
+        player.getInventory().setArmorContents(new ItemStack[] {this.boots, this.leggings, this.chestplate});
     }
 
     public ItemStack retrieveFlagItem() {
-        return flagInventoryItem.clone();
+        return this.flagInventoryItem.clone();
     }
 
     private ItemStack createFlagItem() {
-        final ItemStack item = new ItemStack(teamColor.flagType());
+        final ItemStack item = new ItemStack(this.teamColor.flagType());
 
-        item.editMeta(meta -> meta.displayName(CtfMiniMessage.getInstance().deserialize(
-            "<i:false><color><team>'s Flag</color>",
-            Placeholder.styling("color", teamColor.color()),
-            Placeholder.component("team", teamColor.formattedDisplayName())
+        item.editMeta(meta -> meta.displayName(CtfMiniMessage.getInstance().deserialize("<i:false><color><team>'s Flag</color>",
+            Placeholder.styling("color", this.teamColor.color()),
+            Placeholder.component("team", this.teamColor.formattedDisplayName())
         )));
 
         return item;
@@ -63,7 +62,7 @@ public class TeamKit {
 
         item.editMeta(meta -> {
             if (meta instanceof LeatherArmorMeta leatherMeta) {
-                leatherMeta.setColor(teamColor.bukkitColor());
+                leatherMeta.setColor(this.teamColor.bukkitColor());
             }
         });
 
